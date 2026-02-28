@@ -23,7 +23,7 @@ from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from config import PSX_HOME_URL, PSX_MARKET_WATCH_URL
+from config import PSX_HOME_URL, PSX_MARKET_WATCH_URL, now_utc5
 
 logger = logging.getLogger(__name__)
 
@@ -96,13 +96,13 @@ def scrape_psx_market_watch() -> pd.DataFrame:
         logger.warning("Header-based parsing found 0 records, trying positional fallback...")
         records = _parse_market_watch_positional(soup)
 
-    scrape_time = datetime.now().isoformat()
+    scrape_time = now_utc5().isoformat()
     df = pd.DataFrame(records)
 
     if not df.empty:
         df["scrape_timestamp"] = scrape_time
         market_date = _extract_market_date(soup)
-        df["date"] = market_date or datetime.now().strftime("%Y-%m-%d")
+        df["date"] = market_date or now_utc5().strftime("%Y-%m-%d")
         logger.info(f"Successfully scraped {len(df)} stock records")
     else:
         logger.warning("No market watch data scraped")
@@ -273,12 +273,12 @@ def scrape_psx_indices() -> pd.DataFrame:
 
     records = _parse_indices(soup)
 
-    scrape_time = datetime.now().isoformat()
+    scrape_time = now_utc5().isoformat()
     df = pd.DataFrame(records)
 
     if not df.empty:
         df["scrape_timestamp"] = scrape_time
-        df["date"] = datetime.now().strftime("%Y-%m-%d")
+        df["date"] = now_utc5().strftime("%Y-%m-%d")
         logger.info(f"Scraped {len(df)} index records")
 
     return df

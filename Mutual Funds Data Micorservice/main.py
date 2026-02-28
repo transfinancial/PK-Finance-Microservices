@@ -32,7 +32,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 import pandas as pd
 
-from config import EXCEL_OUTPUT_DIR, SCRAPE_INTERVAL_MINUTES
+from config import EXCEL_OUTPUT_DIR, SCRAPE_INTERVAL_MINUTES, now_utc5
 from scraper import scrape_mufap_nav_data
 
 # Logging setup
@@ -59,7 +59,7 @@ async def _scrape_loop():
     """Repeat scrape every SCRAPE_INTERVAL_MINUTES using pure asyncio."""
     while True:
         global _next_scrape_time
-        _next_scrape_time = (datetime.now() + timedelta(minutes=SCRAPE_INTERVAL_MINUTES)).isoformat()
+        _next_scrape_time = (now_utc5() + timedelta(minutes=SCRAPE_INTERVAL_MINUTES)).isoformat()
         await asyncio.sleep(SCRAPE_INTERVAL_MINUTES * 60)
         await asyncio.to_thread(_run_scrape)
 
@@ -163,7 +163,7 @@ def _run_scrape():
             return {"status": "no_data", "count": 0}
 
         _latest_data = df
-        _last_scrape_time = datetime.now().isoformat()
+        _last_scrape_time = now_utc5().isoformat()
         _scrape_count += 1
 
         # Rebuild derived caches

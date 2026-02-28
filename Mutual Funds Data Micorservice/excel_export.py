@@ -13,7 +13,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-from config import EXCEL_OUTPUT_DIR
+from config import EXCEL_OUTPUT_DIR, now_utc5
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def save_to_excel(df: pd.DataFrame, filename: str = None) -> str:
     os.makedirs(EXCEL_OUTPUT_DIR, exist_ok=True)
 
     if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = now_utc5().strftime("%Y%m%d_%H%M%S")
         filename = f"mutual_funds_nav_{timestamp}.xlsx"
 
     filepath = os.path.join(EXCEL_OUTPUT_DIR, filename)
@@ -67,7 +67,7 @@ def save_to_excel(df: pd.DataFrame, filename: str = None) -> str:
     ws["A1"].alignment = Alignment(horizontal="center")
 
     ws.merge_cells("A2:I2")
-    ws["A2"] = f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}"
+    ws["A2"] = f"Generated on: {now_utc5().strftime('%B %d, %Y at %I:%M %p')} (UTC+5)"
     ws["A2"].font = subtitle_font
     ws["A2"].alignment = Alignment(horizontal="center")
 

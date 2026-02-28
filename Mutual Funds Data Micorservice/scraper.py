@@ -26,7 +26,7 @@ from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from config import MUFAP_DAILY_NAV_URL
+from config import MUFAP_DAILY_NAV_URL, now_utc5
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def scrape_mufap_nav_data(url: Optional[str] = None) -> pd.DataFrame:
             logger.warning("Header-based parsing found 0 records; trying positional parser...")
             records = _parse_nav_table_positional(soup)
 
-        scrape_time = datetime.now().isoformat()
+        scrape_time = now_utc5().isoformat()
         df = pd.DataFrame(records)
 
         if not df.empty:
@@ -177,7 +177,7 @@ def _parse_nav_table_with_headers(soup: BeautifulSoup) -> list[dict]:
                 "offer_price": _try_float(_g("offer")),
                 "repurchase_price": _try_float(_g("repurchase")),
                 "nav": nav_val,
-                "date_updated": _normalise_date(_g("validity")) or datetime.now().strftime("%Y-%m-%d"),
+                "date_updated": _normalise_date(_g("validity")) or now_utc5().strftime("%Y-%m-%d"),
                 "trustee": _g("trustee") or "",
             }
             records.append(record)
@@ -254,7 +254,7 @@ def _parse_nav_table_positional(soup: BeautifulSoup) -> list[dict]:
                 "offer_price": nums[0] if len(nums) > 1 else None,
                 "repurchase_price": nums[1] if len(nums) > 2 else None,
                 "nav": nav_val,
-                "date_updated": date_found or datetime.now().strftime("%Y-%m-%d"),
+                "date_updated": date_found or now_utc5().strftime("%Y-%m-%d"),
                 "trustee": "",
             })
 
