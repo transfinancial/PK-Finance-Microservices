@@ -743,11 +743,11 @@
         <h3><svg><use href="#ico-link"/></svg> API Endpoints</h3>
         <div class="config-field">
           <label>MUFAP</label>
-          <input id="cfgMufap" value="https://mutual-funds-microservice.up.railway.app" onchange="checkAll()">
+          <input id="cfgMufap" value="https://pk.up.railway.app/api/mufap" onchange="checkAll()">
         </div>
         <div class="config-field">
           <label>PSX</label>
-          <input id="cfgPsx" value="https://psx-microservice.up.railway.app" onchange="checkAll()">
+          <input id="cfgPsx" value="https://pk.up.railway.app/api/psx" onchange="checkAll()">
         </div>
       </div>
 
@@ -757,23 +757,24 @@
           <table>
             <thead><tr><th>Service</th><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
             <tbody>
-              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/funds</td><td>All funds (filter, sort, paginate)</td></tr>
-              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/funds/search?q=</td><td>Search by name / category / trustee</td></tr>
-              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/funds/categories</td><td>Categories with counts</td></tr>
-              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/funds/stats</td><td>Aggregate statistics</td></tr>
-              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/funds/top-nav</td><td>Top N by NAV</td></tr>
-              <tr><td class="dim">MUFAP</td><td><span class="method post">POST</span></td><td class="mono">/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
-              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/export/excel</td><td>Download Excel</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/stocks</td><td>All stocks (filter, sort, paginate)</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/stocks/search?symbol=</td><td>Search by symbol</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/stocks/{symbol}</td><td>Single stock detail</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/stocks/gainers</td><td>Top gainers</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/stocks/losers</td><td>Top losers</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/stocks/active</td><td>Most active by volume</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/stocks/summary</td><td>Market summary stats</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/indices</td><td>PSX indices</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method post">POST</span></td><td class="mono">/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/export/excel</td><td>Download Excel</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds</td><td>All funds (filter, sort, paginate)</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds/search?q=</td><td>Search by name / category / trustee</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds/categories</td><td>Categories with counts</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds/category/{name}</td><td>Funds in a category</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds/stats</td><td>Aggregate statistics</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds/top-nav</td><td>Top N by NAV</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method post">POST</span></td><td class="mono">/api/mufap/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
+              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/export/excel</td><td>Download Excel</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks</td><td>All stocks (filter, sort, paginate)</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks/search?symbol=</td><td>Search by symbol</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks/{symbol}</td><td>Single stock detail</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks/gainers</td><td>Top gainers</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks/losers</td><td>Top losers</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks/active</td><td>Most active by volume</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks/summary</td><td>Market summary stats</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/indices</td><td>PSX indices</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method post">POST</span></td><td class="mono">/api/psx/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
+              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/export/excel</td><td>Download Excel</td></tr>
             </tbody>
           </table>
         </div>
