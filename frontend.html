@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pakistan Financial Data</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #000; --surface: #0a0a0a; --card: #111; --border: #222;
+    --text: #e5e5e5; --muted: #777; --accent: #fff; --green: #4ade80;
+    --red: #f87171; --dim: #333; --hover: #181818;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; line-height: 1.5;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50; background: var(--bg);
+    backdrop-filter: blur(12px);
+  }
+  .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .nav-tabs { display: flex; gap: 0; }
+  .nav-tab {
+    padding: 8px 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; color: var(--muted); border: 1px solid var(--border);
+    background: transparent; transition: all .15s; letter-spacing: 0.2px;
+  }
+  .nav-tab:first-child { border-radius: 6px 0 0 6px; }
+  .nav-tab:last-child { border-radius: 0 6px 6px 0; }
+  .nav-tab:not(:first-child) { border-left: none; }
+  .nav-tab.active { background: var(--accent); color: var(--bg); }
+  .nav-tab:hover:not(.active) { background: var(--hover); color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--dim); transition: background .3s;
+  }
+  .status-dot.online { background: var(--green); }
+  .status-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── STAT GRID ── */
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .stat .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+  .stat .val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .val.sm { font-size: 14px; font-weight: 500; }
+  .stat .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .btn {
+    padding: 8px 16px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: transparent; color: var(--text);
+    transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+    font-family: inherit; letter-spacing: 0.2px;
+  }
+  .btn:hover { background: var(--hover); border-color: var(--dim); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .btn.primary:hover { opacity: .85; }
+  .search-input {
+    padding: 8px 14px; font-size: 12px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--card); color: var(--text);
+    outline: none; min-width: 200px; font-family: inherit;
+  }
+  .search-input::placeholder { color: var(--dim); }
+  .search-input:focus { border-color: var(--muted); }
+  .spacer { flex: 1; }
+
+  /* ── FILTER CHIPS ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .chip {
+    padding: 5px 12px; font-size: 11px; font-weight: 500;
+    border: 1px solid var(--border); border-radius: 20px;
+    cursor: pointer; color: var(--muted); background: transparent;
+    transition: all .15s; font-family: inherit;
+  }
+  .chip:hover { border-color: var(--muted); color: var(--text); }
+  .chip.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    padding: 10px 14px; text-align: left; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;
+    color: var(--muted); background: var(--card); border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none; position: sticky; top: 0; white-space: nowrap;
+  }
+  thead th:hover { color: var(--text); }
+  tbody td {
+    padding: 9px 14px; border-bottom: 1px solid var(--border);
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--hover); }
+  .mono { font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 11px; }
+  .right { text-align: right; }
+  .green { color: var(--green); }
+  .red { color: var(--red); }
+  .dim { color: var(--muted); }
+  .bold { font-weight: 600; }
+  .rec-count { font-size: 11px; color: var(--muted); }
+
+  /* ── MSG ── */
+  .msg-bar {
+    padding: 10px 16px; border-radius: 6px; font-size: 12px;
+    margin-bottom: 16px; display: none; border: 1px solid var(--border);
+    background: var(--card);
+  }
+  .msg-bar.show { display: flex; align-items: center; gap: 10px; }
+  .msg-bar.error { border-color: #7f1d1d; color: var(--red); }
+  .msg-bar.success { border-color: #14532d; color: var(--green); }
+  .spinner {
+    width: 14px; height: 14px; border: 2px solid var(--dim);
+    border-top-color: var(--text); border-radius: 50%;
+    animation: spin .6s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+  }
+  .empty .icon { font-size: 32px; margin-bottom: 12px; opacity: .5; }
+  .empty p { font-size: 13px; }
+
+  /* ── INDEX CARDS ── */
+  .idx-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .idx-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+  }
+  .idx-card .name { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .idx-card .val { font-size: 20px; font-weight: 700; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+  .idx-card .chg { font-size: 12px; font-weight: 600; }
+
+  /* ── CONFIG BAR ── */
+  .config-bar {
+    display: flex; gap: 12px; align-items: center; margin-bottom: 20px;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--card);
+  }
+  .config-bar label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .config-bar input {
+    padding: 6px 10px; font-size: 12px; border: 1px solid var(--border);
+    border-radius: 4px; background: var(--bg); color: var(--text);
+    font-family: 'SF Mono', 'Consolas', monospace; width: 220px; outline: none;
+  }
+  .config-bar input:focus { border-color: var(--muted); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { flex-direction: column; gap: 12px; padding: 12px 16px; }
+    .container { padding: 16px; }
+    .nav-right { width: 100%; justify-content: space-between; }
+    .search-input { min-width: 120px; flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="logo">PK Finance <span>/ data</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchSection('funds')">◆ Mutual Funds</button>
+    <button class="nav-tab" onclick="switchSection('stocks')">◆ Stocks</button>
+    <button class="nav-tab" onclick="switchSection('indices')">◆ Indices</button>
+    <button class="nav-tab" onclick="switchSection('config')">⚙ Config</button>
+  </div>
+  <div class="nav-right">
+    <span class="status-label" id="mufapLabel">MUFAP</span>
+    <div class="status-dot" id="mufapDot"></div>
+    <span class="status-label" id="psxLabel">PSX</span>
+    <div class="status-dot" id="psxDot"></div>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Message -->
+  <div class="msg-bar" id="msg"></div>
+
+  <!-- ═══════ FUNDS SECTION ═══════ -->
+  <div class="section active" id="sec-funds">
+    <div class="stat-grid" id="fundStats">
+      <div class="stat"><div class="label">Total Funds</div><div class="val" id="fTotal">—</div></div>
+      <div class="stat"><div class="label">Categories</div><div class="val" id="fCats">—</div></div>
+      <div class="stat"><div class="label">Avg NAV</div><div class="val" id="fAvg">—</div></div>
+      <div class="stat"><div class="label">Max NAV</div><div class="val" id="fMax">—</div></div>
+      <div class="stat"><div class="label">Data Date</div><div class="val sm" id="fDate">—</div></div>
+      <div class="stat"><div class="label">Last Scrape</div><div class="val sm" id="fScrape">—</div></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn primary" onclick="scrapeFunds()" id="btnScrapeFunds">↻ Scrape</button>
+      <button class="btn" onclick="loadFunds()">↓ Load</button>
+      <button class="btn" onclick="window.open(mufapApi()+'/export/excel')">⤓ Excel</button>
+      <button class="btn" onclick="loadFundCategories()">▤ Categories</button>
+      <div class="spacer"></div>
+      <input class="search-input" id="fundSearch" placeholder="Search fund name..." onkeydown="if(event.key==='Enter')searchFunds()">
+      <button class="btn" onclick="searchFunds()">Search</button>
+      <span class="rec-count" id="fundCount"></span>
+    </div>
+
+    <div class="chips" id="fundChips"></div>
+
+    <div id="fundEmpty" class="empty">
+      <div class="icon">◇</div>
+      <p>Click <strong>Scrape</strong> to fetch data, then <strong>Load</strong> to view.</p>
+    </div>
+
+    <div class="table-wrap" id="fundTableWrap" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortFunds(0)">#</th>
+            <th onclick="sortFunds(1)">Category</th>
+            <th onclick="sortFunds(2)">Fund Name</th>
+            <th onclick="sortFunds(3)">Inception</th>
+            <th onclick="sortFunds(4)" class="right">Offer</th>
+            <th onclick="sortFunds(5)" class="right">Repurchase</th>
+            <th onclick="sortFunds(6)" class="right">NAV</th>
+            <th onclick="sortFunds(7)">Date</th>
+            <th onclick="sortFunds(8)">Trustee</th>
+          </tr>
+        </thead>
+        <tbody id="fundBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════ STOCKS SECTION ═══════ -->
+  <div class="section" id="sec-stocks">
+
+    <!-- Sub-tabs for stocks views -->
+    <div class="toolbar" style="margin-bottom:8px">
+      <button class="btn active" id="stab-all" onclick="switchStockView('all')">All</button>
+      <button class="btn" id="stab-gainers" onclick="switchStockView('gainers')">▲ Gainers</button>
+      <button class="btn" id="stab-losers" onclick="switchStockView('losers')">▼ Losers</button>
+      <button class="btn" id="stab-active" onclick="switchStockView('active')">● Active</button>
+      <button class="btn" id="stab-summary" onclick="switchStockView('summary')">Σ Summary</button>
+    </div>
+
+    <div class="stat-grid" id="stockStats">
+      <div class="stat"><div class="label">Total Stocks</div><div class="val" id="sTotal">—</div></div>
+      <div class="stat"><div class="label">Gainers</div><div class="val green" id="sGain">—</div></div>
+      <div class="stat"><div class="label">Losers</div><div class="val red" id="sLose">—</div></div>
+      <div class="stat"><div class="label">Unchanged</div><div class="val" id="sFlat">—</div></div>
+      <div class="stat"><div class="label">Total Volume</div><div class="val sm" id="sVol">—</div></div>
+      <div class="stat"><div class="label">Last Scrape</div><div class="val sm" id="sScrape">—</div></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn primary" onclick="scrapeStocks()" id="btnScrapeStocks">↻ Scrape</button>
+      <button class="btn" onclick="loadStocks()">↓ Load</button>
+      <button class="btn" onclick="window.open(psxApi()+'/export/excel')">⤓ Excel</button>
+      <div class="spacer"></div>
+      <input class="search-input" id="stockSearch" placeholder="Search symbol (e.g. HBL)..." onkeydown="if(event.key==='Enter')searchStocks()">
+      <button class="btn" onclick="searchStocks()">Search</button>
+      <span class="rec-count" id="stockCount"></span>
+    </div>
+
+    <div id="stockEmpty" class="empty">
+      <div class="icon">◇</div>
+      <p>Click <strong>Scrape</strong> to fetch PSX data, then <strong>Load</strong>.</p>
+    </div>
+
+    <!-- All / Gainers / Losers / Active view -->
+    <div class="table-wrap" id="stockTableWrap" style="display:none">
+      <table>
+        <thead>
+          <tr id="stockHead">
+            <th onclick="sortStocks(0)">#</th>
+            <th onclick="sortStocks(1)">Symbol</th>
+            <th onclick="sortStocks(2)" class="right">LDCP</th>
+            <th onclick="sortStocks(3)" class="right">Open</th>
+            <th onclick="sortStocks(4)" class="right">High</th>
+            <th onclick="sortStocks(5)" class="right">Low</th>
+            <th onclick="sortStocks(6)" class="right">Current</th>
+            <th onclick="sortStocks(7)" class="right">Change</th>
+            <th onclick="sortStocks(8)" class="right">Chg%</th>
+            <th onclick="sortStocks(9)" class="right">Volume</th>
+          </tr>
+        </thead>
+        <tbody id="stockBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Summary view -->
+    <div id="summaryView" style="display:none"></div>
+  </div>
+
+  <!-- ═══════ INDICES SECTION ═══════ -->
+  <div class="section" id="sec-indices">
+    <div class="toolbar">
+      <button class="btn primary" onclick="loadIndices()">↓ Load Indices</button>
+      <button class="btn" onclick="scrapeIndices()">↻ Scrape</button>
+    </div>
+    <div id="idxEmpty" class="empty" style="margin-top:24px">
+      <div class="icon">◇</div>
+      <p>Click <strong>Load Indices</strong> to view PSX index data.</p>
+    </div>
+    <div class="idx-grid" id="idxGrid" style="margin-top:16px"></div>
+  </div>
+
+  <!-- ═══════ CONFIG SECTION ═══════ -->
+  <div class="section" id="sec-config">
+    <h3 style="font-size:14px; margin-bottom:16px; font-weight:600;">API Configuration</h3>
+    <div class="config-bar">
+      <label>MUFAP API</label>
+      <input id="cfgMufap" value="http://localhost:8001" onchange="checkAll()">
+    </div>
+    <div class="config-bar">
+      <label>PSX API</label>
+      <input id="cfgPsx" value="http://localhost:8002" onchange="checkAll()">
+    </div>
+    <div style="margin-top:24px">
+      <h3 style="font-size:14px; margin-bottom:12px; font-weight:600;">Endpoints Reference</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Service</th><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="dim">MUFAP</td><td class="mono">GET</td><td class="mono">/funds</td><td>All funds (filter, sort, paginate)</td></tr>
+            <tr><td class="dim">MUFAP</td><td class="mono">GET</td><td class="mono">/funds/search?q=</td><td>Search by name / category / trustee</td></tr>
+            <tr><td class="dim">MUFAP</td><td class="mono">GET</td><td class="mono">/funds/categories</td><td>Categories with counts</td></tr>
+            <tr><td class="dim">MUFAP</td><td class="mono">GET</td><td class="mono">/funds/stats</td><td>Aggregate statistics</td></tr>
+            <tr><td class="dim">MUFAP</td><td class="mono">GET</td><td class="mono">/funds/top-nav</td><td>Top N by NAV</td></tr>
+            <tr><td class="dim">MUFAP</td><td class="mono">POST</td><td class="mono">/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
+            <tr><td class="dim">MUFAP</td><td class="mono">GET</td><td class="mono">/export/excel</td><td>Download Excel</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/stocks</td><td>All stocks (filter, sort, paginate)</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/stocks/search?symbol=</td><td>Search by symbol</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/stocks/{symbol}</td><td>Single stock detail</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/stocks/gainers</td><td>Top gainers</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/stocks/losers</td><td>Top losers</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/stocks/active</td><td>Most active by volume</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/stocks/summary</td><td>Market summary stats</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/indices</td><td>PSX indices</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">POST</td><td class="mono">/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
+            <tr><td class="dim">PSX</td><td class="mono">GET</td><td class="mono">/export/excel</td><td>Download Excel</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── API Helpers ──
+function mufapApi() { return document.getElementById('cfgMufap').value.replace(/\/+$/,''); }
+function psxApi() { return document.getElementById('cfgPsx').value.replace(/\/+$/,''); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function n(v, d=2) { return v != null ? Number(v).toLocaleString('en-PK', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—'; }
+function nInt(v) { return v != null ? Number(v).toLocaleString() : '—'; }
+function chgCls(v) { return v > 0 ? 'green' : v < 0 ? 'red' : 'dim'; }
+function fmtChg(v) { if (v == null) return '—'; return (v > 0 ? '+' : '') + Number(v).toFixed(2); }
+function ts(d) { return d ? new Date(d).toLocaleString() : '—'; }
+
+// ── State ──
+let fundData = [], stockData = [];
+let fSortCol = -1, fSortAsc = true, sSortCol = -1, sSortAsc = true;
+let activeFundCat = null, activeStockView = 'all';
+
+// ── Messages ──
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.className = 'msg-bar show' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+  el.innerHTML = type === 'loading' ? '<div class="spinner"></div>' + text : text;
+}
+function hideMsg() { const el = document.getElementById('msg'); el.className = 'msg-bar'; el.innerHTML = ''; }
+
+// ── Section Switch ──
+function switchSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(name)) t.classList.add('active');
+  });
+}
+
+// ── Health Check ──
+async function checkAll() {
+  for (const [api, dotId] of [[mufapApi(), 'mufapDot'], [psxApi(), 'psxDot']]) {
+    try {
+      const r = await fetch(api + '/health', { signal: AbortSignal.timeout(5000) });
+      if (r.ok) { const d = await r.json(); document.getElementById(dotId).className = 'status-dot' + (d.ready ? ' online' : ''); }
+      else document.getElementById(dotId).className = 'status-dot';
+    } catch { document.getElementById(dotId).className = 'status-dot'; }
+  }
+}
+
+// ═══════════════════════════════════════
+//  MUTUAL FUNDS
+// ═══════════════════════════════════════
+async function loadFundStats() {
+  try {
+    const [st, root] = await Promise.all([
+      fetch(mufapApi() + '/funds/stats').then(r => r.json()),
+      fetch(mufapApi() + '/').then(r => r.json()),
+    ]);
+    document.getElementById('fTotal').textContent = st.total_funds || 0;
+    document.getElementById('fCats').textContent = st.total_categories || 0;
+    document.getElementById('fAvg').textContent = st.nav ? n(st.nav.mean) : '—';
+    document.getElementById('fMax').textContent = st.nav ? n(st.nav.max) : '—';
+    document.getElementById('fDate').textContent = st.data_date || '—';
+    document.getElementById('fScrape').textContent = ts(root.last_scrape);
+  } catch {}
+}
+
+async function scrapeFunds() {
+  const btn = document.getElementById('btnScrapeFunds'); btn.disabled = true;
+  showMsg('Scraping MUFAP data…', 'loading');
+  try {
+    const r = await fetch(mufapApi() + '/scrape/sync', { method: 'POST' });
+    const d = await r.json();
+    if (d.count > 0) { showMsg('Scraped ' + d.count + ' funds', 'success'); loadFundStats(); }
+    else showMsg('Scrape returned 0 records', 'error');
+    setTimeout(hideMsg, 3000);
+  } catch (e) { showMsg('Scrape failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; }
+}
+
+async function loadFunds(category) {
+  showMsg('Loading funds…', 'loading');
+  try {
+    let url = mufapApi() + '/funds?limit=5000';
+    if (category) url += '&category=' + encodeURIComponent(category);
+    const r = await fetch(url); const d = await r.json();
+    fundData = d.data || [];
+    renderFunds(fundData);
+    document.getElementById('fundCount').textContent = fundData.length + ' records';
+    hideMsg();
+  } catch (e) { showMsg('Load failed: ' + e.message, 'error'); }
+}
+
+async function searchFunds() {
+  const q = document.getElementById('fundSearch').value.trim();
+  if (!q) { loadFunds(); return; }
+  showMsg('Searching…', 'loading');
+  try {
+    const r = await fetch(mufapApi() + '/funds/search?q=' + encodeURIComponent(q));
+    const d = await r.json();
+    fundData = d.data || [];
+    renderFunds(fundData);
+    document.getElementById('fundCount').textContent = fundData.length + ' results';
+    hideMsg(); if (!fundData.length) showMsg('No funds match "' + esc(q) + '"', 'error');
+  } catch (e) { showMsg('Search failed: ' + e.message, 'error'); }
+}
+
+async function loadFundCategories() {
+  try {
+    const r = await fetch(mufapApi() + '/funds/categories'); const d = await r.json();
+    const cats = d.categories || [];
+    const el = document.getElementById('fundChips');
+    el.innerHTML = '<button class="chip' + (!activeFundCat ? ' active' : '') + '" onclick="activeFundCat=null;loadFunds();loadFundCategories()">All</button>';
+    cats.forEach(c => {
+      el.innerHTML += '<button class="chip' + (activeFundCat === c.category ? ' active' : '') +
+        '" onclick="activeFundCat=\'' + esc(c.category).replace(/'/g,"\\'") + '\';loadFunds(activeFundCat);loadFundCategories()">' +
+        esc(c.category) + ' <span class="dim">(' + c.count + ')</span></button>';
+    });
+  } catch {}
+}
+
+function renderFunds(data) {
+  const wrap = document.getElementById('fundTableWrap');
+  const empty = document.getElementById('fundEmpty');
+  if (!data.length) { wrap.style.display = 'none'; empty.style.display = 'block'; return; }
+  wrap.style.display = 'block'; empty.style.display = 'none';
+  document.getElementById('fundBody').innerHTML = data.map((r, i) => `<tr>
+    <td class="dim">${i+1}</td>
+    <td class="dim">${esc(r.fund_category||'—')}</td>
+    <td class="bold">${esc(r.fund_name||'—')}</td>
+    <td class="dim">${esc(r.inception_date||'—')}</td>
+    <td class="mono right">${n(r.offer_price,4)}</td>
+    <td class="mono right">${n(r.repurchase_price,4)}</td>
+    <td class="mono right bold">${n(r.nav,4)}</td>
+    <td class="dim">${esc(r.date_updated||'—')}</td>
+    <td class="dim">${esc(r.trustee||'—')}</td>
+  </tr>`).join('');
+}
+
+function sortFunds(col) {
+  if (fSortCol === col) fSortAsc = !fSortAsc; else { fSortCol = col; fSortAsc = true; }
+  const keys = ['_','fund_category','fund_name','inception_date','offer_price','repurchase_price','nav','date_updated','trustee'];
+  const k = keys[col];
+  fundData.sort((a,b) => {
+    let va = a[k], vb = b[k];
+    if (['offer_price','repurchase_price','nav'].includes(k)) { va = Number(va)||0; vb = Number(vb)||0; }
+    else { va = (va||'').toString().toLowerCase(); vb = (vb||'').toString().toLowerCase(); }
+    return fSortAsc ? (va<vb?-1:va>vb?1:0) : (va>vb?-1:va<vb?1:0);
+  });
+  renderFunds(fundData);
+}
+
+// ═══════════════════════════════════════
+//  STOCKS
+// ═══════════════════════════════════════
+function switchStockView(view) {
+  activeStockView = view;
+  document.querySelectorAll('[id^=stab-]').forEach(b => b.classList.remove('active'));
+  document.getElementById('stab-' + view).classList.add('active');
+  if (view === 'summary') { loadSummary(); return; }
+  document.getElementById('summaryView').style.display = 'none';
+  document.getElementById('stockTableWrap').style.display = stockData.length ? 'block' : 'none';
+  document.getElementById('stockEmpty').style.display = stockData.length ? 'none' : 'block';
+
+  if (view === 'all') { renderStocks(stockData); return; }
+
+  const ep = view === 'gainers' ? '/stocks/gainers?limit=50' : view === 'losers' ? '/stocks/losers?limit=50' : '/stocks/active?limit=50';
+  fetch(psxApi() + ep).then(r => r.json()).then(d => { renderStocks(d.data || []); document.getElementById('stockCount').textContent = (d.data||[]).length + ' stocks'; }).catch(() => {});
+}
+
+async function loadStockStats() {
+  try {
+    const r = await fetch(psxApi() + '/stocks/summary'); const d = await r.json();
+    document.getElementById('sTotal').textContent = d.total_stocks || 0;
+    document.getElementById('sGain').textContent = d.gainers || 0;
+    document.getElementById('sLose').textContent = d.losers || 0;
+    document.getElementById('sFlat').textContent = d.unchanged || 0;
+    document.getElementById('sVol').textContent = nInt(d.total_volume);
+    document.getElementById('sScrape').textContent = ts(d.last_scrape);
+  } catch {}
+}
+
+async function scrapeStocks() {
+  const btn = document.getElementById('btnScrapeStocks'); btn.disabled = true;
+  showMsg('Scraping PSX data…', 'loading');
+  try {
+    const r = await fetch(psxApi() + '/scrape/sync', { method: 'POST' });
+    const d = await r.json();
+    if (d.stocks > 0) { showMsg('Scraped ' + d.stocks + ' stocks', 'success'); loadStockStats(); }
+    else showMsg('Scrape returned 0 stocks', 'error');
+    setTimeout(hideMsg, 3000);
+  } catch (e) { showMsg('Scrape failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; }
+}
+
+async function loadStocks() {
+  showMsg('Loading stocks…', 'loading');
+  try {
+    const r = await fetch(psxApi() + '/stocks?limit=5000&sort_by=volume&ascending=false');
+    const d = await r.json();
+    stockData = d.data || [];
+    renderStocks(stockData);
+    document.getElementById('stockCount').textContent = stockData.length + ' stocks';
+    loadStockStats();
+    hideMsg();
+  } catch (e) { showMsg('Load failed: ' + e.message, 'error'); }
+}
+
+async function searchStocks() {
+  const q = document.getElementById('stockSearch').value.trim();
+  if (!q) { loadStocks(); return; }
+  showMsg('Searching…', 'loading');
+  try {
+    const r = await fetch(psxApi() + '/stocks/search?symbol=' + encodeURIComponent(q));
+    const d = await r.json();
+    stockData = d.data || [];
+    renderStocks(stockData);
+    document.getElementById('stockCount').textContent = stockData.length + ' results';
+    hideMsg(); if (!stockData.length) showMsg('No match for "' + esc(q) + '"', 'error');
+  } catch (e) { showMsg('Search failed: ' + e.message, 'error'); }
+}
+
+function renderStocks(data) {
+  const wrap = document.getElementById('stockTableWrap');
+  const empty = document.getElementById('stockEmpty');
+  const sum = document.getElementById('summaryView');
+  sum.style.display = 'none';
+  if (!data.length) { wrap.style.display = 'none'; empty.style.display = 'block'; return; }
+  wrap.style.display = 'block'; empty.style.display = 'none';
+  document.getElementById('stockBody').innerHTML = data.map((r, i) => {
+    const cc = chgCls(r.change);
+    return `<tr>
+      <td class="dim">${i+1}</td>
+      <td class="bold">${esc(r.symbol||'')}</td>
+      <td class="mono right">${n(r.ldcp)}</td>
+      <td class="mono right">${n(r.open)}</td>
+      <td class="mono right">${n(r.high)}</td>
+      <td class="mono right">${n(r.low)}</td>
+      <td class="mono right bold">${n(r.current)}</td>
+      <td class="mono right ${cc}">${fmtChg(r.change)}</td>
+      <td class="mono right ${cc}">${r.change_pct!=null?r.change_pct.toFixed(2)+'%':'—'}</td>
+      <td class="mono right">${nInt(r.volume)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function sortStocks(col) {
+  if (sSortCol === col) sSortAsc = !sSortAsc; else { sSortCol = col; sSortAsc = true; }
+  const keys = ['_','symbol','ldcp','open','high','low','current','change','change_pct','volume'];
+  const k = keys[col];
+  stockData.sort((a,b) => {
+    let va = a[k], vb = b[k];
+    if (k === 'symbol') { va = (va||'').toLowerCase(); vb = (vb||'').toLowerCase(); }
+    else { va = Number(va)||0; vb = Number(vb)||0; }
+    return sSortAsc ? (va<vb?-1:va>vb?1:0) : (va>vb?-1:va<vb?1:0);
+  });
+  renderStocks(stockData);
+}
+
+async function loadSummary() {
+  document.getElementById('stockTableWrap').style.display = 'none';
+  document.getElementById('stockEmpty').style.display = 'none';
+  const sv = document.getElementById('summaryView');
+  sv.style.display = 'block';
+  try {
+    const r = await fetch(psxApi() + '/stocks/summary'); const d = await r.json();
+    sv.innerHTML = `<div class="stat-grid">
+      <div class="stat"><div class="label">Total Stocks</div><div class="val">${d.total_stocks||0}</div></div>
+      <div class="stat"><div class="label">Gainers</div><div class="val green">${d.gainers||0}</div></div>
+      <div class="stat"><div class="label">Losers</div><div class="val red">${d.losers||0}</div></div>
+      <div class="stat"><div class="label">Unchanged</div><div class="val">${d.unchanged||0}</div></div>
+      <div class="stat"><div class="label">Total Volume</div><div class="val sm">${nInt(d.total_volume)}</div></div>
+      <div class="stat"><div class="label">Avg Change %</div><div class="val sm ${chgCls(d.avg_change_pct)}">${d.avg_change_pct!=null?d.avg_change_pct.toFixed(2)+'%':'—'}</div></div>
+      <div class="stat"><div class="label">Market Date</div><div class="val sm">${d.market_date||'—'}</div></div>
+      <div class="stat"><div class="label">Last Scrape</div><div class="val sm">${ts(d.last_scrape)}</div></div>
+    </div>`;
+  } catch (e) { sv.innerHTML = '<div class="empty"><p>Failed to load summary</p></div>'; }
+}
+
+// ═══════════════════════════════════════
+//  INDICES
+// ═══════════════════════════════════════
+async function loadIndices() {
+  showMsg('Loading indices…', 'loading');
+  try {
+    const r = await fetch(psxApi() + '/indices'); const d = await r.json();
+    const items = d.data || [];
+    const grid = document.getElementById('idxGrid');
+    const empty = document.getElementById('idxEmpty');
+    if (!items.length) { empty.style.display = 'block'; grid.innerHTML = ''; hideMsg(); showMsg('No index data available. Try scraping first.', 'error'); return; }
+    empty.style.display = 'none';
+    grid.innerHTML = items.map(i => {
+      const cls = chgCls(i.change);
+      const arrow = (i.change||0) >= 0 ? '▲' : '▼';
+      return `<div class="idx-card">
+        <div class="name">${esc(i.index_name)}</div>
+        <div class="val">${i.value!=null?nInt(i.value):'—'}</div>
+        <div class="chg ${cls}">${arrow} ${fmtChg(i.change)} (${i.change_pct!=null?i.change_pct.toFixed(2)+'%':'—'})</div>
+      </div>`;
+    }).join('');
+    hideMsg();
+  } catch (e) { showMsg('Failed: ' + e.message, 'error'); }
+}
+
+async function scrapeIndices() {
+  showMsg('Scraping indices…', 'loading');
+  try {
+    await fetch(psxApi() + '/scrape/indices', { method: 'POST' });
+    showMsg('Done', 'success'); setTimeout(hideMsg, 2000);
+    loadIndices();
+  } catch (e) { showMsg('Failed: ' + e.message, 'error'); }
+}
+
+// ── Init ──
+checkAll(); loadFundStats(); loadStockStats();
+setInterval(checkAll, 30000);
+</script>
+</body>
+</html>
