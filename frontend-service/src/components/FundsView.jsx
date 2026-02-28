@@ -9,7 +9,7 @@ import TrendingUpRounded from '@mui/icons-material/TrendingUpRounded'
 import CalendarTodayRounded from '@mui/icons-material/CalendarTodayRounded'
 import StorageRounded from '@mui/icons-material/StorageRounded'
 
-export default function FundsView() {
+export default function FundsView({ refreshKey }) {
   const [funds, setFunds] = useState([])
   const [stats, setStats] = useState(null)
   const [categories, setCategories] = useState([])
@@ -39,7 +39,7 @@ export default function FundsView() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { load(activeCategory) }, [load, activeCategory])
+  useEffect(() => { load(activeCategory) }, [load, activeCategory, refreshKey])
 
   const handleSearch = async () => {
     if (!search.trim()) return load(activeCategory)

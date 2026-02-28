@@ -79,6 +79,14 @@ function invalidate(prefix) {
   }
 }
 
+/** Clear entire cache (used by pull-to-refresh) */
+function clearAllCache() {
+  cache.clear()
+  inflight.clear()
+}
+
+export { clearAllCache }
+
 export const api = {
   health:        ()  => request('/api/health'),
 

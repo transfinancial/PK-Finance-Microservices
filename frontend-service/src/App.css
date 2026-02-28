@@ -966,3 +966,76 @@ body {
     max-width: 700px;
   }
 }
+
+/* ═══════════════════════════════════════════
+   Pull-to-Refresh (mobile only)
+   Bitget-style minimalist design
+   ═══════════════════════════════════════════ */
+.ptr-container {
+  position: relative;
+  width: 100%;
+}
+
+.ptr-indicator {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-40px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.ptr-indicator.idle {
+  opacity: 0 !important;
+}
+
+.ptr-spinner-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ptr-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text);
+  border-radius: 50%;
+}
+
+.ptr-spinner.spinning {
+  animation: ptr-spin 0.6s linear infinite;
+}
+
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ptr-check {
+  color: var(--green);
+  animation: ptr-pop 0.25s cubic-bezier(0.2, 0, 0, 1.5);
+}
+
+@keyframes ptr-pop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ptr-content {
+  will-change: transform;
+}
+
+/* Hide pull-to-refresh on desktop */
+@media (min-width: 769px) {
+  .ptr-indicator { display: none !important; }
+  .ptr-content { transform: none !important; }
+}

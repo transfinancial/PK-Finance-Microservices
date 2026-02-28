@@ -6,7 +6,7 @@ import TrendingUpRounded from '@mui/icons-material/TrendingUpRounded'
 import TrendingDownRounded from '@mui/icons-material/TrendingDownRounded'
 import InsightsRounded from '@mui/icons-material/InsightsRounded'
 
-export default function IndicesView() {
+export default function IndicesView({ refreshKey }) {
   const [indices, setIndices] = useState([])
   const [loading, setLoading] = useState(true)
   const [scraping, setScraping] = useState(false)
@@ -20,7 +20,7 @@ export default function IndicesView() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load() }, [load, refreshKey])
 
   const handleScrape = async () => {
     setScraping(true)

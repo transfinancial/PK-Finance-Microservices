@@ -18,7 +18,7 @@ const SUB_TABS = [
   { id: 'active',  label: 'Active',  Icon: BoltRounded },
 ]
 
-export default function StocksView() {
+export default function StocksView({ refreshKey }) {
   const [stocks, setStocks] = useState([])
   const [summary, setSummary] = useState(null)
   const [sub, setSub] = useState('all')
@@ -42,7 +42,7 @@ export default function StocksView() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { load(sub) }, [load, sub])
+  useEffect(() => { load(sub) }, [load, sub, refreshKey])
 
   const handleSearch = async () => {
     if (!search.trim()) return load(sub)
