@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
-   Fintraxa — Mobile-First Production CSS
-   Clean, neutral, minimal
+   Fintraxa — Responsive Production CSS
+   Mobile-first, desktop-aware
    ═══════════════════════════════════════════ */
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,6 +26,7 @@
   --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
   --header-h: 52px;
   --nav-h: 60px;
+  --side-nav-w: 220px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -53,12 +54,18 @@ body {
   min-height: 100dvh;
 }
 
+.app-body {
+  flex: 1;
+  display: flex;
+  padding-top: calc(var(--header-h) + var(--safe-top));
+}
+
 .main-content {
   flex: 1;
-  padding-top: calc(var(--header-h) + var(--safe-top));
   padding-bottom: calc(var(--nav-h) + var(--safe-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
 
 /* ── Header ── */
@@ -117,7 +124,12 @@ body {
 
 .health-badge[data-ok="true"] { color: var(--green); }
 
-/* ── Bottom Nav ── */
+/* ── Side Nav (desktop only, hidden on mobile) ── */
+.side-nav {
+  display: none;
+}
+
+/* ── Bottom Nav (mobile only, hidden on desktop) ── */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -659,23 +671,64 @@ body {
   margin-top: 4px;
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 0; height: 0; }
+/* ── Responsive visibility ── */
+.desktop-only { display: none; }
+.mobile-only  { display: flex; }
 
-/* ── Desktop width cap ── */
-@media (min-width: 480px) {
-  .app {
-    max-width: 480px;
-    margin: 0 auto;
-    box-shadow: -1px 0 0 var(--border), 1px 0 0 var(--border);
-    position: relative;
-  }
+/* ── Category Dropdown (desktop) ── */
+.category-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  max-width: 320px;
+}
 
-  .header, .bottom-nav {
-    max-width: 480px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+.category-select-wrap .select-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.category-select {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.15s;
+}
+
+.category-select:hover {
+  border-color: var(--text-secondary);
+}
+
+.category-select:focus {
+  border-color: var(--text);
+}
+
+/* ── Scrollbar (desktop) ── */
+@media (min-width: 769px) {
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+}
+
+@media (max-width: 768px) {
+  ::-webkit-scrollbar { width: 0; height: 0; }
 }
 
 /* ── Extra small phones ── */
@@ -686,4 +739,213 @@ body {
   .stock-change { min-width: 65px; font-size: 10px; }
   .index-grid { grid-template-columns: 1fr; }
   .idx-val { font-size: 16px; }
+}
+
+
+/* ═══════════════════════════════════════════
+   DESKTOP / TABLET — 769px+
+   Side nav, wider grids, bigger content
+   ═══════════════════════════════════════════ */
+@media (min-width: 769px) {
+
+  /* Hide bottom nav on desktop */
+  .bottom-nav { display: none; }
+
+  /* Show side nav on desktop */
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    width: var(--side-nav-w);
+    flex-shrink: 0;
+    position: sticky;
+    top: calc(var(--header-h) + var(--safe-top));
+    height: calc(100vh - var(--header-h) - var(--safe-top));
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px 12px;
+    overflow-y: auto;
+  }
+
+  .side-nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .side-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .side-nav-item:hover {
+    background: var(--border-light);
+    color: var(--text);
+  }
+
+  .side-nav-item.active {
+    background: var(--text);
+    color: var(--surface);
+    font-weight: 600;
+  }
+
+  /* Main content: no bottom padding needed */
+  .main-content {
+    padding-bottom: 0;
+  }
+
+  /* Views */
+  .view {
+    padding: 24px 32px;
+    max-width: 1200px;
+  }
+
+  /* Stats spacing */
+  .stats-row {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 14px 18px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  /* Toolbar wider */
+  .toolbar {
+    max-width: 500px;
+  }
+
+  /* Responsive visibility */
+  .desktop-only { display: flex; }
+  .mobile-only  { display: none !important; }
+
+  /* Cards: multi-column grid */
+  .card-list:not(.tight) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+  }
+
+  .data-card {
+    padding: 16px 18px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .card-value {
+    font-size: 17px;
+  }
+
+  /* Stock rows: wider grid */
+  .stock-row {
+    grid-template-columns: 1.2fr 0.8fr 0.8fr 1fr;
+    gap: 16px;
+    padding: 12px 18px;
+  }
+
+  .stock-symbol { font-size: 14px; }
+  .stock-vol { font-size: 12px; }
+  .stock-price { font-size: 14px; min-width: 70px; }
+  .stock-change { font-size: 12px; min-width: 110px; }
+
+  /* Index grid: 3 cols on desktop */
+  .index-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .index-card {
+    padding: 18px;
+  }
+
+  .idx-val {
+    font-size: 22px;
+  }
+
+  .idx-change {
+    font-size: 13px;
+  }
+
+  /* Sub-tabs: don't stretch full width */
+  .sub-tabs {
+    max-width: 400px;
+  }
+
+  /* View header */
+  .view-title {
+    font-size: 22px;
+  }
+
+  .view-sub {
+    font-size: 13px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: 80px 40px;
+  }
+
+  /* Search box */
+  .search-box input {
+    font-size: 14px;
+    padding: 11px 14px 11px 40px;
+  }
+
+  /* Header padding for desktop */
+  .header {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+
+  .health-badge {
+    font-size: 11px;
+    gap: 5px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   LARGE DESKTOP — 1200px+
+   Even wider grids
+   ═══════════════════════════════════════════ */
+@media (min-width: 1200px) {
+  .view {
+    padding: 28px 40px;
+  }
+
+  .card-list:not(.tight) {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+
+  .index-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .stats-row {
+    max-width: 600px;
+  }
+
+  .stats-row.four {
+    max-width: 700px;
+  }
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
+import SideNav from './components/SideNav'
 import FundsView from './components/FundsView'
 import StocksView from './components/StocksView'
 import IndicesView from './components/IndicesView'
@@ -25,11 +26,14 @@ export default function App() {
   return (
     <div className="app">
       <Header health={health} />
-      <main className="main-content">
-        {tab === 'funds' && <FundsView />}
-        {tab === 'stocks' && <StocksView />}
-        {tab === 'indices' && <IndicesView />}
-      </main>
+      <div className="app-body">
+        <SideNav tab={tab} onChange={setTab} />
+        <main className="main-content">
+          {tab === 'funds' && <FundsView />}
+          {tab === 'stocks' && <StocksView />}
+          {tab === 'indices' && <IndicesView />}
+        </main>
+      </div>
       <BottomNav tab={tab} onChange={setTab} />
     </div>
   )

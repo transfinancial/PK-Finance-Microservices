@@ -30,7 +30,11 @@ export default function FundsView() {
       ])
       setFunds(fundsRes.data || [])
       setStats(statsRes)
-      setCategories((catsRes.categories || []).filter(Boolean))
+      setCategories(
+        (catsRes.categories || [])
+          .map(c => typeof c === 'object' && c !== null ? c.category : c)
+          .filter(Boolean)
+      )
     } catch { setFunds([]) }
     setLoading(false)
   }, [])
@@ -94,21 +98,36 @@ export default function FundsView() {
         </button>
       </div>
 
-      {/* Category chips */}
+      {/* Category filter — chips on mobile, dropdown on desktop */}
       {categories.length > 0 && (
-        <div className="chips-scroll">
-          <button
-            className={`chip${!activeCategory ? ' active' : ''}`}
-            onClick={() => { setActiveCategory(null) }}
-          >All</button>
-          {categories.map(c => (
+        <>
+          <div className="chips-scroll mobile-only">
             <button
-              key={c}
-              className={`chip${activeCategory === c ? ' active' : ''}`}
-              onClick={() => setActiveCategory(activeCategory === c ? null : c)}
-            >{String(c).replace(/ Fund$/i, '')}</button>
-          ))}
-        </div>
+              className={`chip${!activeCategory ? ' active' : ''}`}
+              onClick={() => { setActiveCategory(null) }}
+            >All</button>
+            {categories.map(c => (
+              <button
+                key={c}
+                className={`chip${activeCategory === c ? ' active' : ''}`}
+                onClick={() => setActiveCategory(activeCategory === c ? null : c)}
+              >{String(c).replace(/ Fund$/i, '')}</button>
+            ))}
+          </div>
+          <div className="category-select-wrap desktop-only">
+            <CategoryRounded sx={{ fontSize: 16 }} className="select-icon" />
+            <select
+              className="category-select"
+              value={activeCategory || ''}
+              onChange={e => setActiveCategory(e.target.value || null)}
+            >
+              <option value="">All Categories ({categories.length})</option>
+              {categories.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
 
       {/* Count */}
