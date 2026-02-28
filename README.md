@@ -7,7 +7,88 @@ Two FastAPI microservices that scrape and serve **real-time financial data** fro
 | **MUFAP** – Mutual Funds | `8001` | [mufap.com.pk](https://www.mufap.com.pk) | ~520 funds |
 | **PSX** – Stock Exchange | `8002` | [dps.psx.com.pk](https://dps.psx.com.pk) | ~470 stocks |
 
-Both services auto-scrape every **30 minutes** and serve data from an in-memory cache for instant responses.
+Both services **auto-scrape every 30 minutes** (configurable via `SCRAPE_INTERVAL_MINUTES`) and serve data from an in-memory cache for instant responses.
+
+---
+
+## Live API (Railway)
+
+Deployed services — use these base URLs to test or integrate from other projects:
+
+| Service | Base URL | Docs |
+|---------|----------|------|
+| **MUFAP** (Mutual Funds) | https://mutual-funds-microservice.up.railway.app | [/docs](https://mutual-funds-microservice.up.railway.app/docs) |
+| **PSX** (Stock Exchange) | https://psx-microservice.up.railway.app | [/docs](https://psx-microservice.up.railway.app/docs) |
+
+### Quick test — MUFAP (Mutual Funds)
+
+```bash
+# Service info (includes auto_refresh_minutes: 30)
+curl https://mutual-funds-microservice.up.railway.app/
+
+# Health
+curl https://mutual-funds-microservice.up.railway.app/health
+
+# All funds (first 20)
+curl "https://mutual-funds-microservice.up.railway.app/funds?limit=20"
+
+# Search by name
+curl "https://mutual-funds-microservice.up.railway.app/funds/search?q=UBL"
+
+# Categories
+curl https://mutual-funds-microservice.up.railway.app/funds/categories
+
+# Top NAV
+curl "https://mutual-funds-microservice.up.railway.app/funds/top-nav?limit=5"
+
+# Stats
+curl https://mutual-funds-microservice.up.railway.app/funds/stats
+
+# Trigger scrape (background)
+curl -X POST https://mutual-funds-microservice.up.railway.app/scrape
+```
+
+### Quick test — PSX (Stock Exchange)
+
+```bash
+# Service info (includes auto_refresh_minutes: 30)
+curl https://psx-microservice.up.railway.app/
+
+# Health
+curl https://psx-microservice.up.railway.app/health
+
+# All stocks (first 20)
+curl "https://psx-microservice.up.railway.app/stocks?limit=20"
+
+# Market summary
+curl https://psx-microservice.up.railway.app/stocks/summary
+
+# Top gainers / losers / active
+curl "https://psx-microservice.up.railway.app/stocks/gainers?limit=10"
+curl "https://psx-microservice.up.railway.app/stocks/losers?limit=10"
+curl "https://psx-microservice.up.railway.app/stocks/active?limit=10"
+
+# Search by symbol
+curl "https://psx-microservice.up.railway.app/stocks/search?symbol=HBL"
+
+# Single stock
+curl https://psx-microservice.up.railway.app/stocks/HBL
+
+# Indices (KSE100, etc.)
+curl https://psx-microservice.up.railway.app/indices
+
+# Trigger scrape (background)
+curl -X POST https://psx-microservice.up.railway.app/scrape
+```
+
+### Auto-scrape (30 minutes)
+
+Both microservices refresh data **every 30 minutes**:
+
+- **MUFAP:** `config.py` uses `SCRAPE_INTERVAL_MINUTES` (default `30`). The background loop in `main.py` runs `_run_scrape` every 30 minutes.
+- **PSX:** Same: `SCRAPE_INTERVAL_MINUTES` default `30` in `config.py`; background loop in `main.py` runs every 30 minutes.
+
+To verify: call `GET /` or `GET /health` on either service; the response includes `"auto_refresh_minutes": 30` and `last_scrape` / `next_scrape` where applicable. On Railway, set `SCRAPE_INTERVAL_MINUTES=30` in Variables (or leave unset to use the default).
 
 ---
 
@@ -578,13 +659,15 @@ Microservices/
 ## Data Refresh
 
 - Both services scrape their respective data sources **on startup**
-- Auto-refresh runs every **30 minutes** (configurable via `SCRAPE_INTERVAL_MINUTES`)
-- Manual scrape available via `POST /scrape` (background) or `POST /scrape/sync` (blocking)
+- **Auto-refresh: every 30 minutes** — both MUFAP and PSX use `SCRAPE_INTERVAL_MINUTES` from config (default `30`). See `Mutual Funds Data Micorservice/config.py` and `Psx Data Reader microservice/config.py`; override with env var `SCRAPE_INTERVAL_MINUTES` (e.g. `30`) on Railway or in `.env` locally.
+- Manual scrape: `POST /scrape` (background) or `POST /scrape/sync` (blocking)
 - All data is served from an in-memory cache — responses are instant
 
 ## OpenAPI / Swagger Docs
 
 Both services have auto-generated interactive API documentation:
 
-- MUFAP: http://localhost:8001/docs
-- PSX: http://localhost:8002/docs
+| Service | Local | Live (Railway) |
+|---------|-------|----------------|
+| MUFAP | http://localhost:8001/docs | https://mutual-funds-microservice.up.railway.app/docs |
+| PSX | http://localhost:8002/docs | https://psx-microservice.up.railway.app/docs |
