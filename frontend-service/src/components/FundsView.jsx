@@ -30,7 +30,7 @@ export default function FundsView() {
       ])
       setFunds(fundsRes.data || [])
       setStats(statsRes)
-      setCategories(catsRes.categories || [])
+      setCategories((catsRes.categories || []).filter(Boolean))
     } catch { setFunds([]) }
     setLoading(false)
   }, [])
@@ -106,7 +106,7 @@ export default function FundsView() {
               key={c}
               className={`chip${activeCategory === c ? ' active' : ''}`}
               onClick={() => setActiveCategory(activeCategory === c ? null : c)}
-            >{c.replace(/ Fund$/i, '')}</button>
+            >{String(c).replace(/ Fund$/i, '')}</button>
           ))}
         </div>
       )}
