@@ -1,7 +1,7 @@
 # PK Finance — Dashboard & API
 
 **API:** [https://api.fintraxa.com](https://api.fintraxa.com)  
-**Dashboard:** Deployed separately as a static frontend
+**Dashboard:** [https://fintraxa.com](https://fintraxa.com)
 
 Split-service architecture: **Backend API** (FastAPI) + **Frontend Dashboard** (nginx) on separate ports.
 

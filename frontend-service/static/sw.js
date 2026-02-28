@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pk-finance-v7';
+const CACHE_NAME = 'pk-finance-v8';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
