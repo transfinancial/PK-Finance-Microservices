@@ -1,6 +1,6 @@
 # PK Finance — Unified Dashboard & API
 
-**Live:** [https://pk.up.railway.app](https://pk.up.railway.app)
+**Live:** [https://api.fintraxa.com](https://api.fintraxa.com)
 
 Single FastAPI service combining **MUFAP Mutual Funds** + **PSX Stock Exchange** data with a built-in PWA dashboard.
 
@@ -8,8 +8,8 @@ Single FastAPI service combining **MUFAP Mutual Funds** + **PSX Stock Exchange**
 |---|---|---|
 | [MUFAP](https://www.mufap.com.pk) — Mutual Funds | `/api/mufap/...` | ~520 funds |
 | [PSX](https://dps.psx.com.pk) — Stock Exchange | `/api/psx/...` | ~470 stocks |
-| Frontend Dashboard | `/` | [Open Dashboard](https://pk.up.railway.app) |
-| Swagger UI (Auto Docs) | `/docs` | [Open Docs](https://pk.up.railway.app/docs) |
+| Frontend Dashboard | `/` | [Open Dashboard](https://api.fintraxa.com) |
+| Swagger UI (Auto Docs) | `/docs` | [Open Docs](https://api.fintraxa.com/docs) |
 
 Data **auto-scrapes every 30 minutes** and is served from an in-memory cache for instant responses.
 
@@ -18,7 +18,7 @@ Data **auto-scrapes every 30 minutes** and is served from an in-memory cache for
 ## Live API Base URL
 
 ```
-https://pk.up.railway.app
+https://api.fintraxa.com
 ```
 
 All API examples below use this base URL. Replace with `http://localhost:8000` when running locally.
@@ -27,7 +27,7 @@ All API examples below use this base URL. Replace with `http://localhost:8000` w
 
 ## Frontend Dashboard
 
-**URL:** [https://pk.up.railway.app](https://pk.up.railway.app)
+**URL:** [https://api.fintraxa.com](https://api.fintraxa.com)
 
 The dashboard is a built-in PWA (Progressive Web App) that provides:
 
@@ -44,7 +44,7 @@ The dashboard is a built-in PWA (Progressive Web App) that provides:
 ### Health Check
 
 ```bash
-curl https://pk.up.railway.app/api/health
+curl https://api.fintraxa.com/api/health
 ```
 
 Returns overall service status with cached record counts:
@@ -101,43 +101,43 @@ Returns overall service status with cached record counts:
 
 ```bash
 # Get all funds
-curl "https://pk.up.railway.app/api/mufap/funds"
+curl "https://api.fintraxa.com/api/mufap/funds"
 
 # Filter by category, sorted by NAV descending, limit 20
-curl "https://pk.up.railway.app/api/mufap/funds?category=Equity&sort_by=nav&ascending=false&limit=20"
+curl "https://api.fintraxa.com/api/mufap/funds?category=Equity&sort_by=nav&ascending=false&limit=20"
 
 # Filter by NAV range
-curl "https://pk.up.railway.app/api/mufap/funds?min_nav=10&max_nav=100"
+curl "https://api.fintraxa.com/api/mufap/funds?min_nav=10&max_nav=100"
 
 # Filter by trustee
-curl "https://pk.up.railway.app/api/mufap/funds?trustee=MCB"
+curl "https://api.fintraxa.com/api/mufap/funds?trustee=MCB"
 
 # Paginate — page 2 with 50 per page
-curl "https://pk.up.railway.app/api/mufap/funds?limit=50&offset=50"
+curl "https://api.fintraxa.com/api/mufap/funds?limit=50&offset=50"
 
 # Search funds by name
-curl "https://pk.up.railway.app/api/mufap/funds/search?q=UBL"
+curl "https://api.fintraxa.com/api/mufap/funds/search?q=UBL"
 
 # Search by category field
-curl "https://pk.up.railway.app/api/mufap/funds/search?q=Equity&field=fund_category"
+curl "https://api.fintraxa.com/api/mufap/funds/search?q=Equity&field=fund_category"
 
 # Get all categories
-curl "https://pk.up.railway.app/api/mufap/funds/categories"
+curl "https://api.fintraxa.com/api/mufap/funds/categories"
 
 # Get funds in a specific category
-curl "https://pk.up.railway.app/api/mufap/funds/category/Equity%20Fund"
+curl "https://api.fintraxa.com/api/mufap/funds/category/Equity%20Fund"
 
 # Top 10 funds by NAV
-curl "https://pk.up.railway.app/api/mufap/funds/top-nav?limit=10"
+curl "https://api.fintraxa.com/api/mufap/funds/top-nav?limit=10"
 
 # Aggregate statistics
-curl "https://pk.up.railway.app/api/mufap/funds/stats"
+curl "https://api.fintraxa.com/api/mufap/funds/stats"
 
 # Download Excel file
-curl -O "https://pk.up.railway.app/api/mufap/export/excel"
+curl -O "https://api.fintraxa.com/api/mufap/export/excel"
 
 # Trigger a manual scrape
-curl -X POST "https://pk.up.railway.app/api/mufap/scrape/sync"
+curl -X POST "https://api.fintraxa.com/api/mufap/scrape/sync"
 ```
 
 ---
@@ -187,49 +187,49 @@ curl -X POST "https://pk.up.railway.app/api/mufap/scrape/sync"
 
 ```bash
 # Get all stocks (default: sorted by volume desc)
-curl "https://pk.up.railway.app/api/psx/stocks"
+curl "https://api.fintraxa.com/api/psx/stocks"
 
 # Filter by minimum volume, sorted by change %
-curl "https://pk.up.railway.app/api/psx/stocks?min_volume=1000000&sort_by=change_pct&ascending=false"
+curl "https://api.fintraxa.com/api/psx/stocks?min_volume=1000000&sort_by=change_pct&ascending=false"
 
 # Filter by price range
-curl "https://pk.up.railway.app/api/psx/stocks?min_price=50&max_price=500"
+curl "https://api.fintraxa.com/api/psx/stocks?min_price=50&max_price=500"
 
 # Filter by positive change only
-curl "https://pk.up.railway.app/api/psx/stocks?min_change_pct=0&sort_by=change_pct&ascending=false"
+curl "https://api.fintraxa.com/api/psx/stocks?min_change_pct=0&sort_by=change_pct&ascending=false"
 
 # Paginate — page 3 with 100 per page
-curl "https://pk.up.railway.app/api/psx/stocks?limit=100&offset=200"
+curl "https://api.fintraxa.com/api/psx/stocks?limit=100&offset=200"
 
 # Search stocks by symbol
-curl "https://pk.up.railway.app/api/psx/stocks/search?symbol=HBL"
+curl "https://api.fintraxa.com/api/psx/stocks/search?symbol=HBL"
 
 # Get a single stock
-curl "https://pk.up.railway.app/api/psx/stocks/ENGRO"
+curl "https://api.fintraxa.com/api/psx/stocks/ENGRO"
 
 # Top 10 gainers
-curl "https://pk.up.railway.app/api/psx/stocks/gainers?limit=10"
+curl "https://api.fintraxa.com/api/psx/stocks/gainers?limit=10"
 
 # Top 10 losers
-curl "https://pk.up.railway.app/api/psx/stocks/losers?limit=10"
+curl "https://api.fintraxa.com/api/psx/stocks/losers?limit=10"
 
 # Most active stocks by volume
-curl "https://pk.up.railway.app/api/psx/stocks/active?limit=15"
+curl "https://api.fintraxa.com/api/psx/stocks/active?limit=15"
 
 # Market summary
-curl "https://pk.up.railway.app/api/psx/stocks/summary"
+curl "https://api.fintraxa.com/api/psx/stocks/summary"
 
 # PSX indices (KSE-100, KSE-30, KMI-30, etc.)
-curl "https://pk.up.railway.app/api/psx/indices"
+curl "https://api.fintraxa.com/api/psx/indices"
 
 # Download Excel file
-curl -O "https://pk.up.railway.app/api/psx/export/excel"
+curl -O "https://api.fintraxa.com/api/psx/export/excel"
 
 # Trigger a manual scrape
-curl -X POST "https://pk.up.railway.app/api/psx/scrape/sync"
+curl -X POST "https://api.fintraxa.com/api/psx/scrape/sync"
 
 # Scrape indices only
-curl -X POST "https://pk.up.railway.app/api/psx/scrape/indices"
+curl -X POST "https://api.fintraxa.com/api/psx/scrape/indices"
 ```
 
 ---
@@ -299,7 +299,7 @@ Open http://localhost:8000 for the dashboard, or http://localhost:8000/docs for 
                          └─────────────────────────────┘
 ```
 
-**Live URL:** https://pk.up.railway.app
+**Live URL:** https://api.fintraxa.com
 
 **Tech Stack:** Python 3.12 · FastAPI · BeautifulSoup4 + lxml · Pandas · ORJSONResponse · GZip · Multi-stage Docker
 
