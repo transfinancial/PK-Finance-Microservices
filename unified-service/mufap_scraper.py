@@ -65,9 +65,13 @@ def scrape_mufap_nav_data(url: Optional[str] = None) -> pd.DataFrame:
     try:
         response = _session.get(target_url, timeout=30)
         response.raise_for_status()
-        logger.info(f"Fetched page OK – {len(response.text):,} chars")
+        html = response.text
+        logger.info(f"Fetched page OK – {len(html):,} chars")
+        response.close()
+        del response  # free response body immediately
 
-        soup = BeautifulSoup(response.text, "lxml")
+        soup = BeautifulSoup(html, "lxml")
+        del html  # free raw HTML
 
         # Try the structured header-based parser first
         records = _parse_nav_table_with_headers(soup)
@@ -76,8 +80,13 @@ def scrape_mufap_nav_data(url: Optional[str] = None) -> pd.DataFrame:
             logger.warning("Header-based parsing found 0 records; trying positional parser...")
             records = _parse_nav_table_positional(soup)
 
+        # Free the lxml tree (C-allocated memory, invisible to Python GC)
+        soup.decompose()
+        del soup
+
         scrape_time = now_utc5().isoformat()
         df = pd.DataFrame(records)
+        del records  # free the intermediate list
 
         if not df.empty:
             df["scrape_timestamp"] = scrape_time

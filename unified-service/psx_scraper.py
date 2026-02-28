@@ -46,11 +46,20 @@ _session.mount("http://", HTTPAdapter(max_retries=_retry, pool_maxsize=4))
 
 
 def _fetch_page(url: str, timeout: int = 20) -> Optional[BeautifulSoup]:
-    """Fetch a URL and return a BeautifulSoup object, or None on failure."""
+    """Fetch a URL and return a BeautifulSoup object, or None on failure.
+
+    IMPORTANT: Caller must call soup.decompose() and del soup after use
+    to free the lxml C-allocated DOM tree.
+    """
     try:
         resp = _session.get(url, timeout=timeout)
         resp.raise_for_status()
-        return BeautifulSoup(resp.text, "lxml")
+        html = resp.text
+        resp.close()
+        del resp  # free response body immediately
+        soup = BeautifulSoup(html, "lxml")
+        del html  # free raw HTML string
+        return soup
     except Exception as e:
         logger.error(f"Failed to fetch {url}: {e}")
         return None
@@ -96,12 +105,19 @@ def scrape_psx_market_watch() -> pd.DataFrame:
         logger.warning("Header-based parsing found 0 records, trying positional fallback...")
         records = _parse_market_watch_positional(soup)
 
+    # Extract date before freeing the tree
+    market_date = _extract_market_date(soup)
+
+    # Free the lxml tree (C-allocated memory, invisible to Python GC)
+    soup.decompose()
+    del soup
+
     scrape_time = now_utc5().isoformat()
     df = pd.DataFrame(records)
+    del records  # free intermediate list
 
     if not df.empty:
         df["scrape_timestamp"] = scrape_time
-        market_date = _extract_market_date(soup)
         df["date"] = market_date or now_utc5().strftime("%Y-%m-%d")
         logger.info(f"Successfully scraped {len(df)} stock records")
     else:
@@ -273,8 +289,13 @@ def scrape_psx_indices() -> pd.DataFrame:
 
     records = _parse_indices(soup)
 
+    # Free the lxml tree
+    soup.decompose()
+    del soup
+
     scrape_time = now_utc5().isoformat()
     df = pd.DataFrame(records)
+    del records
 
     if not df.empty:
         df["scrape_timestamp"] = scrape_time
@@ -336,6 +357,10 @@ def scrape_psx_performers() -> dict:
             performers["top_advancers"] = _parse_performer_table(heading)
         elif "decliner" in heading_text:
             performers["top_decliners"] = _parse_performer_table(heading)
+
+    # Free the lxml tree
+    soup.decompose()
+    del soup
 
     return performers
 

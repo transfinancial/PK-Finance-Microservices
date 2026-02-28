@@ -103,10 +103,13 @@ def _mufap_scrape():
             logger.warning("MUFAP scrape returned no data")
             return {"status": "no_data", "count": 0}
         df = _downcast_df(df)
+        old = _mufap_data
         _mufap_data = df
+        del old  # explicitly drop old DF reference
         _mufap_last_scrape = now_utc5().isoformat()
         _mufap_scrape_count += 1
         _mufap_rebuild_caches(df)
+        _release_memory()
         logger.info(f"MUFAP scraped {len(df)} funds")
         return {"status": "success", "count": len(df), "scraped_at": _mufap_last_scrape}
     except Exception as e:
@@ -157,14 +160,19 @@ def _psx_scrape():
             logger.warning("PSX scrape returned no data")
             return {"status": "no_data", "stocks": 0, "indices": 0}
         df_stocks = _downcast_df(df_stocks)
+        old_stocks = _psx_stock_data
         _psx_stock_data = df_stocks
+        del old_stocks  # explicitly drop old DF reference
         _psx_last_scrape = now_utc5().isoformat()
         _psx_scrape_count += 1
         _psx_rebuild_caches(df_stocks)
         df_indices = scrape_psx_indices()
         if not df_indices.empty:
             df_indices = _downcast_df(df_indices)
+        old_idx = _psx_index_data
         _psx_index_data = df_indices
+        del old_idx  # explicitly drop old index DF
+        _release_memory()
         logger.info(f"PSX scraped {len(df_stocks)} stocks, {len(df_indices)} indices")
         return {"status": "success", "stocks": len(df_stocks), "indices": len(df_indices), "scraped_at": _psx_last_scrape}
     except Exception as e:
@@ -190,7 +198,22 @@ def _downcast_df(df: pd.DataFrame) -> pd.DataFrame:
         df[col] = pd.to_numeric(df[col], downcast="float")
     for col in df.select_dtypes(include=["int64"]).columns:
         df[col] = pd.to_numeric(df[col], downcast="integer")
+    # Convert low-cardinality string columns to category dtype (saves ~80% RAM)
+    for col in df.select_dtypes(include=["object"]).columns:
+        if df[col].nunique() < len(df) * 0.5:  # < 50% unique → use category
+            df[col] = df[col].astype("category")
     return df
+
+
+def _release_memory():
+    """Force Python GC and release freed pages back to the OS (Linux/Docker)."""
+    gc.collect()
+    try:
+        import ctypes
+        libc = ctypes.CDLL("libc.so.6")
+        libc.malloc_trim(0)  # return freed heap pages to OS
+    except (OSError, AttributeError):
+        pass  # not Linux / not glibc – skip
 
 
 async def _scrape_loop():
@@ -200,7 +223,7 @@ async def _scrape_loop():
         await asyncio.sleep(SCRAPE_INTERVAL_MINUTES * 60)
         await asyncio.to_thread(_mufap_scrape)
         await asyncio.to_thread(_psx_scrape)
-        gc.collect()
+        _release_memory()
 
 
 @asynccontextmanager
@@ -213,7 +236,7 @@ async def lifespan(app: FastAPI):
     # Initial scrape (both sources, in threads)
     await asyncio.to_thread(_mufap_scrape)
     await asyncio.to_thread(_psx_scrape)
-    gc.collect()
+    _release_memory()
 
     # Start repeating loop
     task = asyncio.create_task(_scrape_loop())
@@ -268,9 +291,9 @@ async def unified_health():
 async def debug_memory():
     """Memory usage info for debugging."""
     import sys
-    mufap_bytes = sys.getsizeof(_mufap_data) if _mufap_data is not None else 0
-    psx_bytes = sys.getsizeof(_psx_stock_data) if _psx_stock_data is not None else 0
-    idx_bytes = sys.getsizeof(_psx_index_data) if _psx_index_data is not None else 0
+    mufap_bytes = 0
+    psx_bytes = 0
+    idx_bytes = 0
     if _mufap_data is not None:
         mufap_bytes = int(_mufap_data.memory_usage(deep=True).sum())
     if _psx_stock_data is not None:
@@ -279,13 +302,15 @@ async def debug_memory():
         idx_bytes = int(_psx_index_data.memory_usage(deep=True).sum())
     import psutil, os as _os
     proc = psutil.Process(_os.getpid())
-    rss_mb = round(proc.memory_info().rss / (1024 * 1024), 2)
+    mem = proc.memory_info()
     return {
-        "process_rss_mb": rss_mb,
+        "process_rss_mb": round(mem.rss / (1024 * 1024), 2),
+        "process_vms_mb": round(mem.vms / (1024 * 1024), 2),
         "dataframes_mb": round((mufap_bytes + psx_bytes + idx_bytes) / (1024 * 1024), 2),
         "mufap_mb": round(mufap_bytes / (1024 * 1024), 2),
         "psx_mb": round(psx_bytes / (1024 * 1024), 2),
         "indices_mb": round(idx_bytes / (1024 * 1024), 2),
+        "gc_tracked_objects": len(gc.get_objects()),
         "scrape_count": _mufap_scrape_count + _psx_scrape_count,
     }
 
