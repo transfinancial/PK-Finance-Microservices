@@ -1,4 +1,8 @@
-# PK Finance — Dashboard & API
+# Fintraxa — Pakistan Finance Dashboard & API
+
+<p align="center">
+  <img src="frontend-service/public/icons/fintraxa.png" alt="Fintraxa" width="80" />
+</p>
 
 **API:** [https://api.fintraxa.com](https://api.fintraxa.com)  
 **Dashboard:** [https://fintraxa.com](https://fintraxa.com)
@@ -32,15 +36,16 @@ All API examples below use this base URL. Replace with `http://localhost:8000` w
 
 ## Frontend Dashboard
 
-The dashboard is a standalone PWA (Progressive Web App) served by nginx on port **3000**:
+The dashboard is a **React 19 + Vite 6** single-page PWA served by nginx on port **3000**:
 
-- **Mutual Funds tab** — Browse, search, filter, and sort ~520 Pakistani mutual funds with NAV data
-- **Stocks tab** — View all PSX-listed stocks with price, change, and volume data; switch between All / Gainers / Losers / Most Active / Summary views
+- **Mutual Funds tab** — Browse, search, filter by category (~520 Pakistani mutual funds with NAV data). Each fund card shows the AMC/bank logo via Clearbit with colored-initial fallback
+- **Stocks tab** — View all PSX-listed stocks with price, change, and volume; sub-tabs for All / Gainers / Losers / Most Active. Each stock row shows the company logo
 - **Indices tab** — Live PSX indices (KSE-100, KSE-30, KMI-30, etc.)
-- **Config tab** — Change API endpoints and see a full endpoint reference table
+- **Responsive layout** — Mobile-first with bottom nav; desktop sidebar navigation at 769px+
+- **Section branding** — MUFAP logo header for Mutual Funds, PSX logo header for Stocks
 - **Mobile installable** — Add to home screen on Android/iOS for native app experience
 
-The frontend connects to the backend API via configurable URLs in the Config tab.
+**Tech:** React 19 · Vite 6 · MUI Icons 6.4 · CSS variables (light/dark ready) · nginx
 
 ---
 
@@ -273,10 +278,17 @@ pip install -r requirements.txt
 uvicorn main:app --port 8000
 ```
 
-**Frontend (requires Node.js or Python):**
+**Frontend (requires Node.js):**
 ```bash
-cd frontend-service/static
-python -m http.server 3000
+cd frontend-service
+npm install
+npm run dev
+# Dev server: http://localhost:5173
+```
+
+For production build:
+```bash
+npm run build   # outputs to dist/
 ```
 
 ### Configuration
@@ -308,7 +320,7 @@ python -m http.server 3000
 
 **API URL:** https://api.fintraxa.com
 
-**Tech Stack:** Python 3.12 · FastAPI · BeautifulSoup4 + lxml · Pandas · ORJSONResponse · GZip · nginx · Multi-stage Docker
+**Tech Stack:** Python 3.12 · FastAPI · BeautifulSoup4 + lxml · Pandas · ORJSONResponse · GZip · React 19 · Vite 6 · MUI Icons · nginx · Multi-stage Docker
 
 ---
 
@@ -318,22 +330,39 @@ python -m http.server 3000
 Microservices/
 ├── docker-compose.yml
 ├── README.md
+├── .gitignore
 ├── api-service/                    # ← Backend API (port 8000)
-│   ├── main.py                     # FastAPI app (API only)
+│   ├── main.py                     # FastAPI app (unified API gateway)
 │   ├── mufap_scraper.py            # MUFAP web scraper
 │   ├── psx_scraper.py              # PSX web scraper
 │   ├── config.py                   # Configuration
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend-service/               # ← Frontend Dashboard (port 3000)
-│   ├── nginx.conf                  # nginx config
-│   ├── Dockerfile
-│   └── static/
-│       ├── index.html              # PWA dashboard
-│       ├── manifest.json
-│       ├── sw.js
-│       └── icons/
+│   ├── index.html                  # Entry HTML with favicon/PWA meta
+│   ├── vite.config.js              # Vite 6 build config
+│   ├── package.json                # React 19, MUI Icons, Vite
+│   ├── nginx.conf                  # nginx config (gzip, caching)
+│   ├── Dockerfile                  # Multi-stage Node 22 + nginx
+│   ├── public/
+│   │   ├── manifest.json           # PWA manifest
+│   │   ├── sw.js                   # Service worker
+│   │   └── icons/                  # Fintraxa, MUFAP, PSX logos + favicons
+│   └── src/
+│       ├── main.jsx                # React entry point
+│       ├── App.jsx                 # Root component (tabs, health polling)
+│       ├── App.css                 # All styles (responsive, dark-ready)
+│       ├── api.js                  # API client (fintraxa.com endpoints)
+│       └── components/
+│           ├── Header.jsx          # Top bar with logo + health badges
+│           ├── BottomNav.jsx       # Mobile bottom navigation
+│           ├── SideNav.jsx         # Desktop sidebar navigation
+│           ├── FundsView.jsx       # Mutual funds list + categories
+│           ├── StocksView.jsx      # PSX stocks (all/gainers/losers/active)
+│           ├── IndicesView.jsx     # Market indices grid
+│           ├── BankLogo.jsx        # Company logo (Clearbit + initial fallback)
+│           └── Skeleton.jsx        # Loading shimmer components
 ├── unified-service/                # Legacy combined service (deprecated)
-├── Mutual Funds Data Micorservice/ # Original (deprecated)
-└── Psx Data Reader microservice/   # Original (deprecated)
+├── Mutual Funds Data Micorservice/ # Original scraper (reference)
+└── Psx Data Reader microservice/   # Original scraper (reference)
 ```
