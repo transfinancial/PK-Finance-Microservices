@@ -672,7 +672,7 @@ body {
 }
 
 /* ── Responsive visibility ── */
-.desktop-only { display: none; }
+.desktop-only { display: none !important; }
 .mobile-only  { display: flex; }
 
 /* ── Category Dropdown (desktop) ── */
