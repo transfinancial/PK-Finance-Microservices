@@ -31,7 +31,9 @@ ENV EXCEL_OUTPUT_DIR=/app/output \
 
 EXPOSE 8001
 
-HEALTHCHECK --interval=60s --timeout=5s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')" || exit 1
+# Use PORT so Railway (and other platforms) can assign the port
+ENV PORT=8001
+HEALTHCHECK --interval=60s --timeout=5s --retries=3 --start-period=90s \
+  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.environ.get('PORT', '8001') + '/health')" || exit 1
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8001} --workers 1"]
