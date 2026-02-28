@@ -72,6 +72,20 @@ export default function StocksView() {
 
   return (
     <div className="view">
+      {/* PSX Header */}
+      <div className="view-header">
+        <div className="view-header-left">
+          <img src="/icons/psx.png" alt="PSX" className="view-logo" />
+          <div>
+            <h2 className="view-title">PSX Stocks</h2>
+            <p className="view-sub">Pakistan Stock Exchange</p>
+          </div>
+        </div>
+        <button className="icon-btn" onClick={handleScrape} disabled={scraping} title="Refresh data">
+          {scraping ? <Spinner /> : <RefreshRounded sx={{ fontSize: 20 }} />}
+        </button>
+      </div>
+
       {/* Stats */}
       {loading && !summary ? <StatSkeleton count={4} /> : summary && (
         <div className="stats-row four">
@@ -105,7 +119,7 @@ export default function StocksView() {
         ))}
       </div>
 
-      {/* Search + Scrape */}
+      {/* Search */}
       <div className="toolbar">
         <div className="search-box">
           <SearchRounded sx={{ fontSize: 18 }} className="search-icon" />
@@ -117,9 +131,6 @@ export default function StocksView() {
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
           />
         </div>
-        <button className="icon-btn" onClick={handleScrape} disabled={scraping} title="Refresh data">
-          {scraping ? <Spinner /> : <RefreshRounded sx={{ fontSize: 20 }} />}
-        </button>
       </div>
 
       {/* Count */}

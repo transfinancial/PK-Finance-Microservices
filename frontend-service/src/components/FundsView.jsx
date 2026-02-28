@@ -63,6 +63,20 @@ export default function FundsView() {
 
   return (
     <div className="view">
+      {/* MUFAP Header */}
+      <div className="view-header">
+        <div className="view-header-left">
+          <img src="/icons/mutual.png" alt="MUFAP" className="view-logo" />
+          <div>
+            <h2 className="view-title">Mutual Funds</h2>
+            <p className="view-sub">MUFAP Pakistan</p>
+          </div>
+        </div>
+        <button className="icon-btn" onClick={handleScrape} disabled={scraping} title="Refresh data">
+          {scraping ? <Spinner /> : <RefreshRounded sx={{ fontSize: 20 }} />}
+        </button>
+      </div>
+
       {/* Stats */}
       {loading && !stats ? <StatSkeleton count={3} /> : stats && (
         <div className="stats-row">
@@ -81,7 +95,7 @@ export default function FundsView() {
         </div>
       )}
 
-      {/* Search + Scrape */}
+      {/* Search */}
       <div className="toolbar">
         <div className="search-box">
           <SearchRounded sx={{ fontSize: 18 }} className="search-icon" />
@@ -93,9 +107,6 @@ export default function FundsView() {
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
           />
         </div>
-        <button className="icon-btn" onClick={handleScrape} disabled={scraping} title="Refresh data">
-          {scraping ? <Spinner /> : <RefreshRounded sx={{ fontSize: 20 }} />}
-        </button>
       </div>
 
       {/* Category filter — chips on mobile, dropdown on desktop */}

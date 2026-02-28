@@ -185,6 +185,23 @@ body {
   margin-bottom: 16px;
 }
 
+.view-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: var(--card);
+  padding: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border: 1px solid var(--border);
+}
+
 .view-title {
   font-size: 18px;
   font-weight: 700;
