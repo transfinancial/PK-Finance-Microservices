@@ -29,9 +29,9 @@ export default function App() {
       <div className="app-body">
         <SideNav tab={tab} onChange={setTab} />
         <main className="main-content">
-          {tab === 'funds' && <FundsView />}
-          {tab === 'stocks' && <StocksView />}
-          {tab === 'indices' && <IndicesView />}
+          <div style={{ display: tab === 'funds' ? 'block' : 'none' }}><FundsView /></div>
+          <div style={{ display: tab === 'stocks' ? 'block' : 'none' }}><StocksView /></div>
+          <div style={{ display: tab === 'indices' ? 'block' : 'none' }}><IndicesView /></div>
         </main>
       </div>
       <BottomNav tab={tab} onChange={setTab} />
