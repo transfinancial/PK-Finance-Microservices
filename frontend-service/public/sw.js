@@ -1,5 +1,5 @@
-const CACHE_NAME = 'fintraxa-v1';
-const STATIC_ASSETS = ['/', '/index.html'];
+const CACHE_NAME = 'fintraxa-v2';
+const STATIC_ASSETS = ['/', '/index.html', '/icons/logo.png', '/icons/favicon.png'];
 
 self.addEventListener('install', event => {
   self.skipWaiting();
