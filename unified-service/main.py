@@ -10,6 +10,7 @@ Merging 3 Railway services into 1 reduces hosting cost by ~60-66%.
 """
 
 import os
+import gc
 import asyncio
 import logging
 from datetime import timedelta
@@ -17,6 +18,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from threading import Lock
 from pathlib import Path
+from glob import glob
 
 from fastapi import FastAPI, HTTPException, Query, BackgroundTasks, APIRouter
 from fastapi.responses import FileResponse, ORJSONResponse
@@ -87,7 +89,7 @@ def _mufap_rebuild_caches(df: pd.DataFrame):
             "max": round(float(df["offer_price"].max()), 4) if "offer_price" in df.columns else None,
         },
         "data_date": df["date_updated"].mode().iloc[0] if not df["date_updated"].mode().empty else None,
-        "trustees": sorted(df["trustee"].dropna().unique().tolist()) if "trustee" in df.columns else [],
+        "trustee_count": int(df["trustee"].nunique()) if "trustee" in df.columns else 0,
     }
 
 
@@ -102,13 +104,13 @@ def _mufap_scrape():
         if df.empty:
             logger.warning("MUFAP scrape returned no data")
             return {"status": "no_data", "count": 0}
+        df = _downcast_df(df)
         _mufap_data = df
         _mufap_last_scrape = now_utc5().isoformat()
         _mufap_scrape_count += 1
         _mufap_rebuild_caches(df)
-        from excel_export import save_to_excel
-        excel_path = save_to_excel(df)
-        logger.info(f"MUFAP data saved: {excel_path}")
+        _cleanup_old_excels("mutual_funds")
+        logger.info(f"MUFAP scraped {len(df)} funds")
         return {"status": "success", "count": len(df), "scraped_at": _mufap_last_scrape}
     except Exception as e:
         logger.error(f"MUFAP scrape failed: {e}", exc_info=True)
@@ -157,14 +159,17 @@ def _psx_scrape():
         if df_stocks.empty:
             logger.warning("PSX scrape returned no data")
             return {"status": "no_data", "stocks": 0, "indices": 0}
+        df_stocks = _downcast_df(df_stocks)
         _psx_stock_data = df_stocks
         _psx_last_scrape = now_utc5().isoformat()
         _psx_scrape_count += 1
         _psx_rebuild_caches(df_stocks)
-        from excel_export import save_stocks_to_excel
-        excel_path = save_stocks_to_excel(df_stocks)
+        _cleanup_old_excels("psx_")
         df_indices = scrape_psx_indices()
+        if not df_indices.empty:
+            df_indices = _downcast_df(df_indices)
         _psx_index_data = df_indices
+        logger.info(f"PSX scraped {len(df_stocks)} stocks, {len(df_indices)} indices")
         return {"status": "success", "stocks": len(df_stocks), "indices": len(df_indices), "scraped_at": _psx_last_scrape}
     except Exception as e:
         logger.error(f"PSX scrape failed: {e}", exc_info=True)
@@ -183,6 +188,27 @@ def _get_psx_data() -> pd.DataFrame:
 #  Background scrape loop (single loop for both sources)
 # ══════════════════════════════════════════════════════════════════
 
+def _downcast_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Reduce DataFrame memory by downcasting numeric columns."""
+    for col in df.select_dtypes(include=["float64"]).columns:
+        df[col] = pd.to_numeric(df[col], downcast="float")
+    for col in df.select_dtypes(include=["int64"]).columns:
+        df[col] = pd.to_numeric(df[col], downcast="integer")
+    return df
+
+
+def _cleanup_old_excels(prefix: str, keep: int = 1):
+    """Remove old Excel files, keeping only the latest `keep`."""
+    try:
+        pattern = os.path.join(EXCEL_OUTPUT_DIR, f"{prefix}*.xlsx")
+        files = sorted(glob(pattern), reverse=True)
+        for old_file in files[keep:]:
+            os.remove(old_file)
+            logger.debug(f"Deleted old Excel: {old_file}")
+    except Exception:
+        pass
+
+
 async def _scrape_loop():
     while True:
         global _next_scrape_time
@@ -190,6 +216,7 @@ async def _scrape_loop():
         await asyncio.sleep(SCRAPE_INTERVAL_MINUTES * 60)
         await asyncio.to_thread(_mufap_scrape)
         await asyncio.to_thread(_psx_scrape)
+        gc.collect()
 
 
 @asynccontextmanager
@@ -203,6 +230,7 @@ async def lifespan(app: FastAPI):
     # Initial scrape (both sources, in threads)
     await asyncio.to_thread(_mufap_scrape)
     await asyncio.to_thread(_psx_scrape)
+    gc.collect()
 
     # Start repeating loop
     task = asyncio.create_task(_scrape_loop())
@@ -250,6 +278,30 @@ async def unified_health():
         "mufap": {"ready": mufap_ok, "cached": len(_mufap_data) if mufap_ok else 0, "last_scrape": _mufap_last_scrape},
         "psx": {"ready": psx_ok, "cached": len(_psx_stock_data) if psx_ok else 0, "last_scrape": _psx_last_scrape},
         "next_scrape": _next_scrape_time,
+    }
+
+
+@app.get("/api/debug/memory")
+async def debug_memory():
+    """Memory usage info for debugging."""
+    import sys
+    mufap_bytes = sys.getsizeof(_mufap_data) if _mufap_data is not None else 0
+    psx_bytes = sys.getsizeof(_psx_stock_data) if _psx_stock_data is not None else 0
+    idx_bytes = sys.getsizeof(_psx_index_data) if _psx_index_data is not None else 0
+    if _mufap_data is not None:
+        mufap_bytes = int(_mufap_data.memory_usage(deep=True).sum())
+    if _psx_stock_data is not None:
+        psx_bytes = int(_psx_stock_data.memory_usage(deep=True).sum())
+    if _psx_index_data is not None:
+        idx_bytes = int(_psx_index_data.memory_usage(deep=True).sum())
+    excel_files = list(glob(os.path.join(EXCEL_OUTPUT_DIR, "*.xlsx"))) if os.path.isdir(EXCEL_OUTPUT_DIR) else []
+    return {
+        "dataframes_mb": round((mufap_bytes + psx_bytes + idx_bytes) / (1024 * 1024), 2),
+        "mufap_mb": round(mufap_bytes / (1024 * 1024), 2),
+        "psx_mb": round(psx_bytes / (1024 * 1024), 2),
+        "indices_mb": round(idx_bytes / (1024 * 1024), 2),
+        "excel_files": len(excel_files),
+        "scrape_count": _mufap_scrape_count + _psx_scrape_count,
     }
 
 
@@ -384,17 +436,13 @@ async def fund_stats(category: Optional[str] = Query(None)):
 
 @mufap.get("/export/excel")
 async def mufap_export_excel():
-    if not os.path.exists(EXCEL_OUTPUT_DIR):
-        raise HTTPException(404, "No Excel files available")
-    files = sorted([f for f in os.listdir(EXCEL_OUTPUT_DIR) if f.startswith("mutual_funds") and f.endswith(".xlsx")], reverse=True)
-    if not files:
-        if _mufap_data is not None and not _mufap_data.empty:
-            from excel_export import save_to_excel
-            filepath = save_to_excel(_mufap_data)
-            return FileResponse(filepath, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename=os.path.basename(filepath))
-        raise HTTPException(404, "No Excel files available.")
-    filepath = os.path.join(EXCEL_OUTPUT_DIR, files[0])
-    return FileResponse(filepath, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename=files[0])
+    """Generate and return Excel on demand (not cached to save RAM)."""
+    if _mufap_data is None or _mufap_data.empty:
+        raise HTTPException(404, "No MUFAP data available yet.")
+    from excel_export import save_to_excel
+    filepath = save_to_excel(_mufap_data)
+    gc.collect()
+    return FileResponse(filepath, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename=os.path.basename(filepath))
 
 
 app.include_router(mufap)
@@ -544,17 +592,13 @@ async def get_all_indices():
 
 @psx.get("/export/excel")
 async def psx_export_excel():
-    if not os.path.exists(EXCEL_OUTPUT_DIR):
-        raise HTTPException(404, "No Excel files available")
-    files = sorted([f for f in os.listdir(EXCEL_OUTPUT_DIR) if f.startswith("psx_") and f.endswith(".xlsx")], reverse=True)
-    if not files:
-        if _psx_stock_data is not None and not _psx_stock_data.empty:
-            from excel_export import save_stocks_to_excel
-            filepath = save_stocks_to_excel(_psx_stock_data)
-            return FileResponse(filepath, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename=os.path.basename(filepath))
-        raise HTTPException(404, "No Excel files. Scrape will run automatically.")
-    filepath = os.path.join(EXCEL_OUTPUT_DIR, files[0])
-    return FileResponse(filepath, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename=files[0])
+    """Generate and return Excel on demand (not cached to save RAM)."""
+    if _psx_stock_data is None or _psx_stock_data.empty:
+        raise HTTPException(404, "No PSX data available yet.")
+    from excel_export import save_stocks_to_excel
+    filepath = save_stocks_to_excel(_psx_stock_data)
+    gc.collect()
+    return FileResponse(filepath, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename=os.path.basename(filepath))
 
 
 app.include_router(psx)
