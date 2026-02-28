@@ -7,10 +7,10 @@
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PK Finance">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png">
@@ -52,6 +52,11 @@
     min-height: 100vh; line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Safe area insets for notch/camera cutout */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   /* ── ANIMATIONS ── */
@@ -374,14 +379,110 @@
 
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    nav { flex-direction: column; gap: 12px; height: auto; padding: 14px 16px; }
-    .container { padding: 16px; }
-    .nav-right { width: 100%; justify-content: center; }
-    .nav-tabs { overflow-x: auto; }
-    .search-input { min-width: 140px; flex: 1; }
-    .stat-grid { grid-template-columns: repeat(2, 1fr); }
-    .config-field { flex-direction: column; gap: 6px; }
-    .config-field label { min-width: unset; }
+    nav {
+      flex-direction: column; gap: 8px; height: auto;
+      padding: 12px 16px;
+      padding-top: max(12px, env(safe-area-inset-top));
+    }
+    .logo { font-size: 15px; }
+    .logo-icon { width: 28px; height: 28px; }
+    .logo span { font-size: 13px; }
+    .container { padding: 14px 12px; }
+    .nav-right { width: 100%; justify-content: center; gap: 8px; }
+    .nav-tabs {
+      overflow-x: auto; width: 100%; justify-content: stretch;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      padding: 8px 12px; font-size: 12px; gap: 5px;
+      flex: 1; justify-content: center; min-width: 0;
+    }
+    .nav-tab svg { width: 14px; height: 14px; }
+    .status-pill { padding: 4px 8px; font-size: 9px; gap: 4px; }
+    .status-dot { width: 6px; height: 6px; }
+
+    /* Section headers */
+    .section-header h2 { font-size: 17px; }
+    .section-header p { font-size: 12px; }
+    .section-header .icon-wrap { width: 34px; height: 34px; }
+    .section-header .icon-wrap svg { width: 17px; height: 17px; }
+
+    /* Stats */
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stat { padding: 12px 14px; border-radius: 10px; }
+    .stat .val { font-size: 20px; }
+    .stat .val.sm { font-size: 12px; }
+    .stat .label { font-size: 10px; margin-bottom: 4px; gap: 4px; }
+    .stat .label svg { width: 11px; height: 11px; }
+
+    /* Toolbar */
+    .toolbar {
+      gap: 6px; margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .btn { padding: 8px 12px; font-size: 12px; gap: 5px; }
+    .btn svg { width: 14px; height: 14px; }
+    .search-wrap { flex: 1 1 100%; order: 10; }
+    .search-input { min-width: unset; width: 100%; font-size: 14px; padding: 10px 14px 10px 36px; }
+    .spacer { display: none; }
+    .rec-count { width: 100%; text-align: center; font-size: 11px; order: 11; }
+
+    /* Chips */
+    .chips { gap: 5px; margin-bottom: 12px; }
+    .chip { padding: 5px 10px; font-size: 11px; }
+
+    /* Sub-tabs */
+    .sub-tabs {
+      width: 100%; overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .sub-tabs::-webkit-scrollbar { display: none; }
+    .sub-tab { padding: 7px 10px; font-size: 11px; white-space: nowrap; gap: 4px; }
+    .sub-tab svg { width: 12px; height: 12px; }
+
+    /* Tables */
+    .table-wrap { border-radius: 10px; margin: 0 -4px; }
+    table { font-size: 12px; }
+    thead th { padding: 10px 10px; font-size: 10px; letter-spacing: .4px; }
+    tbody td { padding: 9px 10px; }
+
+    /* Index cards */
+    .idx-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .idx-card { padding: 14px 16px; }
+    .idx-card .val { font-size: 18px; }
+    .idx-card .name { font-size: 10px; }
+    .idx-card .chg { font-size: 12px; }
+
+    /* Config */
+    .config-section { max-width: 100%; }
+    .config-card { padding: 16px; margin-bottom: 12px; }
+    .config-card h3 { font-size: 14px; margin-bottom: 14px; }
+    .config-field { flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .config-field label { min-width: unset; font-size: 11px; }
+    .config-field input { font-size: 12px; padding: 10px 12px; }
+
+    /* Empty states */
+    .empty { padding: 40px 16px; }
+    .empty .icon { width: 48px; height: 48px; }
+    .empty p { font-size: 13px; }
+
+    /* Message bar */
+    .msg-bar { padding: 10px 14px; font-size: 12px; border-radius: 10px; }
+  }
+
+  /* ── SMALL PHONES ── */
+  @media (max-width: 380px) {
+    .nav-tab { padding: 7px 8px; font-size: 11px; }
+    .nav-tab svg { display: none; }
+    .stat-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .stat .val { font-size: 18px; }
+    .stat { padding: 10px 12px; }
+    .idx-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .btn { padding: 7px 10px; font-size: 11px; }
+    .container { padding: 10px 8px; }
   }
 
   /* ── SCROLLBAR ── */
