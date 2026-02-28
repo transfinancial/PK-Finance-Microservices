@@ -1,15 +1,20 @@
-# PK Finance — Unified Dashboard & API
+# PK Finance — Dashboard & API
 
-**Live:** [https://api.fintraxa.com](https://api.fintraxa.com)
+**API:** [https://api.fintraxa.com](https://api.fintraxa.com)  
+**Dashboard:** Deployed separately as a static frontend
 
-Single FastAPI service combining **MUFAP Mutual Funds** + **PSX Stock Exchange** data with a built-in PWA dashboard.
+Split-service architecture: **Backend API** (FastAPI) + **Frontend Dashboard** (nginx) on separate ports.
 
 | Data Source | API Prefix | Records |
 |---|---|---|
 | [MUFAP](https://www.mufap.com.pk) — Mutual Funds | `/api/mufap/...` | ~520 funds |
 | [PSX](https://dps.psx.com.pk) — Stock Exchange | `/api/psx/...` | ~470 stocks |
-| Frontend Dashboard | `/` | [Open Dashboard](https://api.fintraxa.com) |
 | Swagger UI (Auto Docs) | `/docs` | [Open Docs](https://api.fintraxa.com/docs) |
+
+| Service | Port | Description |
+|---|---|---|
+| Backend API | `8000` | FastAPI — data scraping & JSON API |
+| Frontend | `3000` | nginx — static PWA dashboard |
 
 Data **auto-scrapes every 30 minutes** and is served from an in-memory cache for instant responses.
 
@@ -27,15 +32,15 @@ All API examples below use this base URL. Replace with `http://localhost:8000` w
 
 ## Frontend Dashboard
 
-**URL:** [https://api.fintraxa.com](https://api.fintraxa.com)
-
-The dashboard is a built-in PWA (Progressive Web App) that provides:
+The dashboard is a standalone PWA (Progressive Web App) served by nginx on port **3000**:
 
 - **Mutual Funds tab** — Browse, search, filter, and sort ~520 Pakistani mutual funds with NAV data
 - **Stocks tab** — View all PSX-listed stocks with price, change, and volume data; switch between All / Gainers / Losers / Most Active / Summary views
 - **Indices tab** — Live PSX indices (KSE-100, KSE-30, KMI-30, etc.)
 - **Config tab** — Change API endpoints and see a full endpoint reference table
 - **Mobile installable** — Add to home screen on Android/iOS for native app experience
+
+The frontend connects to the backend API via configurable URLs in the Config tab.
 
 ---
 
@@ -252,47 +257,58 @@ All list endpoints return a consistent JSON structure:
 
 ```bash
 docker compose up -d --build
-# Service available at http://localhost:8000
+# Backend API: http://localhost:8000
+# Frontend:    http://localhost:3000
+# Swagger UI:  http://localhost:8000/docs
 ```
 
 ### Option 2: Run Locally
 
+**Backend API:**
 ```bash
-cd unified-service
+cd api-service
 python -m venv venv
 venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 uvicorn main:app --port 8000
 ```
 
-Open http://localhost:8000 for the dashboard, or http://localhost:8000/docs for Swagger UI.
+**Frontend (requires Node.js or Python):**
+```bash
+cd frontend-service/static
+python -m http.server 3000
+```
 
 ### Configuration
 
 | Variable | Default | Description |
 |---|---|---|
 | `SCRAPE_INTERVAL_MINUTES` | `30` | Auto-scrape frequency |
-| `PORT` | `8000` | Server port |
+| `PORT` | `8000` | Backend API port |
 
 ---
 
 ## Architecture
 
 ```
-                         ┌─────────────────────────────┐
-                         │   PK Finance Unified Svc    │ :8000
-   ┌─────────────┐      │                             │
-   │  MUFAP Site │◄─────│  /api/mufap/*  (FastAPI)    │
-   └─────────────┘      │  /api/psx/*    (FastAPI)    │      ┌──────────┐
-   ┌─────────────┐      │  /            (Dashboard)   │─────►│ Browser  │
-   │  PSX Site   │◄─────│                             │      └──────────┘
+   ┌─────────────┐      ┌─────────────────────────────┐
+   │  MUFAP Site │◄─────│  PK Finance API Service     │ :8000
+   └─────────────┘      │                             │
+   ┌─────────────┐      │  /api/mufap/*  (FastAPI)    │
+   │  PSX Site   │◄─────│  /api/psx/*    (FastAPI)    │
    └─────────────┘      │  In-memory cache + 30m loop │
+                         └──────────────▲──────────────┘
+                                        │ fetch()
+                         ┌──────────────┴──────────────┐
+                         │  PK Finance Frontend        │ :3000
+                         │  nginx  ─ static PWA        │
+                         │  index.html + sw.js          │──────►  Browser
                          └─────────────────────────────┘
 ```
 
-**Live URL:** https://api.fintraxa.com
+**API URL:** https://api.fintraxa.com
 
-**Tech Stack:** Python 3.12 · FastAPI · BeautifulSoup4 + lxml · Pandas · ORJSONResponse · GZip · Multi-stage Docker
+**Tech Stack:** Python 3.12 · FastAPI · BeautifulSoup4 + lxml · Pandas · ORJSONResponse · GZip · nginx · Multi-stage Docker
 
 ---
 
@@ -302,18 +318,22 @@ Open http://localhost:8000 for the dashboard, or http://localhost:8000/docs for 
 Microservices/
 ├── docker-compose.yml
 ├── README.md
-├── unified-service/                # ← Deployed service
-│   ├── main.py                     # Combined FastAPI app
+├── api-service/                    # ← Backend API (port 8000)
+│   ├── main.py                     # FastAPI app (API only)
 │   ├── mufap_scraper.py            # MUFAP web scraper
 │   ├── psx_scraper.py              # PSX web scraper
-│   ├── config.py                   # Unified config
+│   ├── config.py                   # Configuration
 │   ├── requirements.txt
+│   └── Dockerfile
+├── frontend-service/               # ← Frontend Dashboard (port 3000)
+│   ├── nginx.conf                  # nginx config
 │   ├── Dockerfile
-│   └── static/                     # Frontend dashboard (PWA)
-│       ├── index.html
+│   └── static/
+│       ├── index.html              # PWA dashboard
 │       ├── manifest.json
 │       ├── sw.js
 │       └── icons/
+├── unified-service/                # Legacy combined service (deprecated)
 ├── Mutual Funds Data Micorservice/ # Original (deprecated)
 └── Psx Data Reader microservice/   # Original (deprecated)
 ```
