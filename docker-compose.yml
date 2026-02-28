@@ -1,73 +1,47 @@
 # ═══════════════════════════════════════════════════════════════
-#  Pakistan Financial Data Microservices – Docker Compose
+#  Pakistan Financial Data – Unified Service (Docker Compose)
 # ═══════════════════════════════════════════════════════════════
 #
 #  Usage:
-#    docker compose up -d --build         # Build & start both
+#    docker compose up -d --build         # Build & start
 #    docker compose logs -f               # Follow live logs
 #    docker compose down                  # Stop everything
 #
-#  Services:
-#    mufap   → http://localhost:8001   (Mutual Funds NAV data)
-#    psx     → http://localhost:8002   (Stock Exchange data)
+#  Single unified service replaces 3 separate containers:
+#    pk-finance → http://localhost:8000
+#      - MUFAP API:    /api/mufap/...
+#      - PSX API:      /api/psx/...
+#      - Dashboard:    /
 #
-#  Both auto-scrape every 30 minutes (configurable via env).
+#  Data auto-scrapes every 30 minutes (configurable via env).
 
 version: "3.9"
 
 services:
-  # ── MUFAP Mutual Funds Service ────────────────────────────────
-  mufap:
+  pk-finance:
     build:
-      context: ./Mutual Funds Data Micorservice
+      context: ./unified-service
       dockerfile: Dockerfile
-    container_name: mufap-service
+    container_name: pk-finance
     ports:
-      - "8001:8001"
+      - "8000:8000"
     environment:
       - SCRAPE_INTERVAL_MINUTES=30
       - EXCEL_OUTPUT_DIR=/app/output
     volumes:
-      - mufap-output:/app/output
+      - finance-output:/app/output
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 60s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 90s
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: "0.5"
-
-  # ── PSX Stock Exchange Service ────────────────────────────────
-  psx:
-    build:
-      context: ./Psx Data Reader microservice
-      dockerfile: Dockerfile
-    container_name: psx-service
-    ports:
-      - "8002:8002"
-    environment:
-      - SCRAPE_INTERVAL_MINUTES=30
-      - EXCEL_OUTPUT_DIR=/app/output
-    volumes:
-      - psx-output:/app/output
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
-      interval: 60s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
+          memory: 512M
           cpus: "0.5"
 
 volumes:
-  mufap-output:
-  psx-output:
+  finance-output:
