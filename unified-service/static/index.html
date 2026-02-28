@@ -556,9 +556,6 @@
       <button class="btn" onclick="loadFunds()">
         <svg><use href="#ico-download"/></svg> Load
       </button>
-      <button class="btn" onclick="window.open(mufapApi()+'/export/excel')">
-        <svg><use href="#ico-file"/></svg> Excel
-      </button>
       <button class="btn" onclick="loadFundCategories()">
         <svg><use href="#ico-grid"/></svg> Categories
       </button>
@@ -662,9 +659,6 @@
       <button class="btn" onclick="loadStocks()">
         <svg><use href="#ico-download"/></svg> Load
       </button>
-      <button class="btn" onclick="window.open(psxApi()+'/export/excel')">
-        <svg><use href="#ico-file"/></svg> Excel
-      </button>
       <div class="spacer"></div>
       <div class="search-wrap">
         <svg><use href="#ico-search"/></svg>
@@ -767,7 +761,6 @@
               <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds/stats</td><td>Aggregate statistics</td></tr>
               <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/funds/top-nav</td><td>Top N by NAV</td></tr>
               <tr><td class="dim">MUFAP</td><td><span class="method post">POST</span></td><td class="mono">/api/mufap/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
-              <tr><td class="dim">MUFAP</td><td><span class="method get">GET</span></td><td class="mono">/api/mufap/export/excel</td><td>Download Excel</td></tr>
               <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/</td><td>Service info &amp; status</td></tr>
               <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/health</td><td>PSX health check</td></tr>
               <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/stocks</td><td>All stocks (filter, sort, paginate)</td></tr>
@@ -780,7 +773,6 @@
               <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/indices</td><td>PSX indices</td></tr>
               <tr><td class="dim">PSX</td><td><span class="method post">POST</span></td><td class="mono">/api/psx/scrape/indices</td><td>Scrape indices only</td></tr>
               <tr><td class="dim">PSX</td><td><span class="method post">POST</span></td><td class="mono">/api/psx/scrape/sync</td><td>Trigger scrape (blocking)</td></tr>
-              <tr><td class="dim">PSX</td><td><span class="method get">GET</span></td><td class="mono">/api/psx/export/excel</td><td>Download Excel</td></tr>
             </tbody>
           </table>
         </div>

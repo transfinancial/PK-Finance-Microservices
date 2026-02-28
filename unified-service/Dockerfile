@@ -24,14 +24,12 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir --no-deps /wheels/*.whl && rm -rf /wheels
 
 # App code
-COPY config.py excel_export.py main.py mufap_scraper.py psx_scraper.py ./
+COPY config.py main.py mufap_scraper.py psx_scraper.py ./
 
 # Frontend static files
 COPY static/ ./static/
 
-RUN mkdir -p /app/output
-ENV EXCEL_OUTPUT_DIR=/app/output \
-    PYTHONDONTWRITEBYTECODE=1 \
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONMALLOC=malloc
 

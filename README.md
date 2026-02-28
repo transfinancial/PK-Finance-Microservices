@@ -73,7 +73,6 @@ Returns overall service status with cached record counts:
 | GET | `/api/mufap/funds/category/{name}` | All funds in a specific category |
 | GET | `/api/mufap/funds/top-nav?limit=` | Top N funds by NAV value |
 | GET | `/api/mufap/funds/stats` | Aggregate statistics (avg, min, max NAV) |
-| GET | `/api/mufap/export/excel` | Download all funds as Excel (.xlsx) |
 | POST | `/api/mufap/scrape` | Trigger background scrape |
 | POST | `/api/mufap/scrape/sync` | Trigger scrape and wait for result |
 
@@ -133,9 +132,6 @@ curl "https://api.fintraxa.com/api/mufap/funds/top-nav?limit=10"
 # Aggregate statistics
 curl "https://api.fintraxa.com/api/mufap/funds/stats"
 
-# Download Excel file
-curl -O "https://api.fintraxa.com/api/mufap/export/excel"
-
 # Trigger a manual scrape
 curl -X POST "https://api.fintraxa.com/api/mufap/scrape/sync"
 ```
@@ -158,7 +154,6 @@ curl -X POST "https://api.fintraxa.com/api/mufap/scrape/sync"
 | GET | `/api/psx/stocks/active?limit=` | Most active by trading volume |
 | GET | `/api/psx/stocks/summary` | Market overview (totals, gainers/losers count) |
 | GET | `/api/psx/indices` | PSX indices (KSE-100, KSE-30, etc.) |
-| GET | `/api/psx/export/excel` | Download all stocks as Excel (.xlsx) |
 | POST | `/api/psx/scrape` | Trigger background scrape |
 | POST | `/api/psx/scrape/sync` | Trigger scrape and wait for result |
 | POST | `/api/psx/scrape/indices` | Scrape indices only |
@@ -222,9 +217,6 @@ curl "https://api.fintraxa.com/api/psx/stocks/summary"
 # PSX indices (KSE-100, KSE-30, KMI-30, etc.)
 curl "https://api.fintraxa.com/api/psx/indices"
 
-# Download Excel file
-curl -O "https://api.fintraxa.com/api/psx/export/excel"
-
 # Trigger a manual scrape
 curl -X POST "https://api.fintraxa.com/api/psx/scrape/sync"
 
@@ -280,7 +272,6 @@ Open http://localhost:8000 for the dashboard, or http://localhost:8000/docs for 
 | Variable | Default | Description |
 |---|---|---|
 | `SCRAPE_INTERVAL_MINUTES` | `30` | Auto-scrape frequency |
-| `EXCEL_OUTPUT_DIR` | `./output` | Excel export directory |
 | `PORT` | `8000` | Server port |
 
 ---
@@ -315,7 +306,6 @@ Microservices/
 │   ├── main.py                     # Combined FastAPI app
 │   ├── mufap_scraper.py            # MUFAP web scraper
 │   ├── psx_scraper.py              # PSX web scraper
-│   ├── excel_export.py             # Excel exports (both)
 │   ├── config.py                   # Unified config
 │   ├── requirements.txt
 │   ├── Dockerfile

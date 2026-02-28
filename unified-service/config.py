@@ -20,7 +20,6 @@ def now_utc5() -> datetime:
 
 
 # Configuration
-EXCEL_OUTPUT_DIR = os.getenv("EXCEL_OUTPUT_DIR", "./output")
 SCRAPE_INTERVAL_MINUTES = int(os.getenv("SCRAPE_INTERVAL_MINUTES", "30"))
 
 # MUFAP URLs
