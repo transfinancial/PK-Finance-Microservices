@@ -35,6 +35,7 @@ html {
   font-size: 15px;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -44,6 +45,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
 }
 
 /* ── App Shell ── */
@@ -66,6 +68,7 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   min-width: 0;
+  overscroll-behavior-y: contain;
 }
 
 /* ── Header ── */
@@ -979,8 +982,8 @@ body {
 .ptr-indicator {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%) translateY(-40px);
+  left: 0;
+  right: 0;
   z-index: 50;
   display: flex;
   align-items: center;
